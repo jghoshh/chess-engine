@@ -1,6 +1,7 @@
 ### MAIN MODULE RESPONSIBLE FOR HANDLING USER INPUT AND RUNNING THE CHESS GAME.
 import pygame 
 import engine
+from move import Move
 
 pygame.init()
 WIDTH = HEIGHT = 512
@@ -40,13 +41,6 @@ def draw_board(surface, board):
                 else: curr = light
             if piece != '--': 
                 surface.blit(IMGS[piece], pygame.Rect(j*SQ_SIZE, i*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-            
-# def draw_pieces(surface, board): 
-#     for i in range(DIM): 
-#         for j in range(DIM): 
-#             piece = board[i][j]
-#             if piece != '--': 
-#                 surface.blit(IMGS[piece], pygame.Rect(j*SQ_SIZE, i*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 ### Main function to run the game.
 def main(): 
@@ -92,18 +86,22 @@ def main():
                 if (len(player_clicks) == 2):
                     
                     # A move is represented by two tuples. The first tuple contains the starting row and col
-                    # and the second tuple contains the ending row and col. 
-                    curr_move = (player_clicks[0], player_clicks[1])
+                    # and the second tuple contains the ending row and col.
+                    if (game.board[player_clicks[0][0]][player_clicks[0][1]] != '--'):  
+                        curr_move = Move(player_clicks[0], player_clicks[1], game.board)
+                        print(curr_move)
+                        print(valid_moves)
                     
                     # check if the current move is valid.
                     if curr_move in valid_moves: 
                         game.make_move(curr_move)
-                        if game.move_log: print(game.convert_to_c(game.move_log[-1]))
+                        if game.move_log: print(game.move_log[-1])
                         move_made = True
 
                     player_clicks.clear()
 
         if move_made and player_clicks: 
+            print("recalculating")
             valid_moves = game.get_valid_moves()
             move_made = False
 
