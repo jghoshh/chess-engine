@@ -1,6 +1,5 @@
-### MODULE TO ACCOUNT FOR MOVES ON THE CHESS BOARD.
+### THE MOVE CLASS
 
-# Dictionaries to get chess notation for moves made.
 RANKS_TO_ROWS = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
 ROW_TO_RANKS = {value: key for key, value in RANKS_TO_ROWS.items()}
 FILES_TO_COLS = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
@@ -8,10 +7,9 @@ COLS_TO_FILES = {value: key for key, value in FILES_TO_COLS.items()}
 
 
 ### Validates and moves a piece and returns a tuple containing the moved piece and the captured piece. 
-def move(start_row, start_col, end_row, end_col, board): 
+def make_move(start_row, start_col, end_row, end_col, board): 
 
     piece_moved = board[start_row][start_col]
-    print(piece_moved)
 
     if (piece_moved) == "--": 
         piece_moved = None
@@ -19,7 +17,6 @@ def move(start_row, start_col, end_row, end_col, board):
     piece_captured = board[end_row][end_col]
     if (piece_captured) == "--": 
         piece_captured = None
-    print(piece_captured)
 
     if piece_moved != None: 
         board[start_row][start_col] = "--"
