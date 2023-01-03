@@ -1,5 +1,7 @@
 ### MODULE RESPONSIBLE FOR HANDLING THE BACKEND OF THE CHESS GAME.
 from move import Move
+from collections import deque
+import numpy as np
 
 ### This class defines and records the state of the chess game being played.
 class Game():
@@ -7,7 +9,7 @@ class Game():
     def __init__(self): 
 
         #The chess board. 
-        self.board = [ 
+        self.board = np.array([ 
         ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"], 
         ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"], 
         ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -16,14 +18,14 @@ class Game():
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
         ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"], 
-        ]
+        ])
 
         # We will maintain an instance variable that checks if it is white's turn to move or not.
         # Note, we will perceive the game from the perspective of white and only white.
         self.white_to_move = True
 
         # We will also maintain a move log, registering all the moves that occured in the game.
-        self.move_log = []
+        self.move_log = deque()
 
         # Dictionary for function calls for more elegant code. 
         self.move_functions = {'P': self.get_pawn_moves, 'R': self.get_rook_moves, 'N': self.get_knight_moves, 
@@ -61,8 +63,7 @@ class Game():
 
     # Function to get all possible moves, without considering any checks. 
     def get_all_moves(self):
-        print("being run again")
-
+        
         all_moves = set()
 
         for i in range(len(self.board)): 
@@ -128,8 +129,13 @@ class Game():
 
 
     def get_rook_moves(self, row, col, valid_move_set): 
-        print("get_rook_moves")
-        pass
+
+        # Get the directions that the rook can possibly move in. 
+        directions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
+
+        for d in range(len(directions)): 
+            for i in range(1, len(self.board)): 
+                ending_row = r + 
 
     def get_knight_moves(self, row, col, valid_move_set):
         print("get_knight_moves")

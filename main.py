@@ -13,7 +13,6 @@ WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 CLOCK = pygame.time.Clock()
 pygame.display.set_caption("Chess Engine Demo")
 
-
 ### Function to load in images. Note that we only want to do this operation once, as it is quite expensive.
 def load_images(board): 
     for row in board: 
@@ -25,7 +24,6 @@ def load_images(board):
 ### Function to draw the game, board, and pieces.
 def draw_game(surface, game):
     draw_board(surface, game.board)
-
 
 def draw_board(surface, board): 
     light = (207, 167, 110) 
@@ -85,8 +83,6 @@ def main():
                 #if two clicks have been recognized, then we validate and make the move defined by the two clicks.
                 if (len(player_clicks) == 2):
                     
-                    # A move is represented by two tuples. The first tuple contains the starting row and col
-                    # and the second tuple contains the ending row and col.
                     if (game.board[player_clicks[0][0]][player_clicks[0][1]] != '--'):  
                         curr_move = Move(player_clicks[0], player_clicks[1], game.board)
                         print(curr_move)
@@ -101,7 +97,6 @@ def main():
                     player_clicks.clear()
 
         if move_made and player_clicks: 
-            print("recalculating")
             valid_moves = game.get_valid_moves()
             move_made = False
 

@@ -10,7 +10,9 @@ class Move():
         self.end_col = end[1]
         self.piece_captured = board[self.end_row][self.end_col]
         self.piece_moved = board[self.start_row][self.start_col]
+        self.id = self.__hash__()
 
+    # need to define a hash function because we are using a set to store valid moves.
     def __hash__(self):
         return hash(self.key())
     
@@ -18,9 +20,9 @@ class Move():
         return (self.start_row, self.start_col, self.end_row, self.end_col, self.piece_captured, self.piece_moved)
 
     def __eq__(self, other):
+        # need is instance here to inspect appropriate attributes.
         if isinstance(other, Move):
-            # Instead of doing such a long and statement, we could assign an id to each move. 
-            return self.start_row == other.start_row and self.start_col == other.start_col and self.end_row == other.end_row and self.end_col == other.end_col and self.piece_captured == other.piece_captured and self.piece_moved == other.piece_moved 
+            return self.id == other.id
         return False
 
     def __repr__(self): 
