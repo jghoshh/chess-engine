@@ -87,8 +87,8 @@ def main():
                     first_click_pos = game.board[player_clicks[0][0]][player_clicks[0][1]]
                     second_click_pos = game.board[player_clicks[1][0]][player_clicks[1][1]]
                     
-                    if (not first_click_pos == '--' and not (first_click_pos == '--' and second_click_pos == '--')): 
-                        
+                    if (not first_click_pos == '--' or not second_click_pos == '--'): 
+
                         curr_move = Move(player_clicks[0], player_clicks[1], game.board)
 
                         # check if the current move is valid.

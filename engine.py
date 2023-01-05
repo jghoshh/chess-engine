@@ -79,19 +79,6 @@ class Game():
             elif (move.piece_moved == 'bK'): 
                 self.black_king_pos = (move.start_row, move.start_col)
 
-    ### Most complicated part probably. 
-    ### The following functions aid in validating moves.
-    ### The main concept behind generating valid moves is that you have to generate the other player's moves to ensure that your move 
-    ### doesn't result in the other player putting you in check. 
-
-    #### Pseudocode: 
-    #### Get all possible moves
-    #### For each possible move, do the following to check if it is a valid move: 
-    #### Make the move
-    #### Generate all the possible moves for the other player.
-    #### See if any of the moves of the other player attacks your king.
-    #### If there is no attack, then the move is valid.
-    #### Else, undo the move. The move is not valid. 
 
     # Function to get all possible moves, without considering any checks. 
     def get_all_moves(self):
@@ -155,6 +142,7 @@ class Game():
             if len(valid_moves) == 0:
                 if self.in_check: 
                     self.check_mate = True
+                    print("checkmate")
                 else: 
                     self.state_mate = True
             else: 
