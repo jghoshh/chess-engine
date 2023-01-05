@@ -4,10 +4,10 @@ import engine
 from move import Move
 
 pygame.init()
-WIDTH = HEIGHT = 512
+WIDTH = HEIGHT = 650
 DIM = 8
 SQ_SIZE = HEIGHT // DIM
-MAX_FPS = 15
+MAX_FPS = 30
 IMGS = {}
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 CLOCK = pygame.time.Clock()
@@ -85,9 +85,10 @@ def main():
                     
                     if (game.board[player_clicks[0][0]][player_clicks[0][1]] != '--'):  
                         curr_move = Move(player_clicks[0], player_clicks[1], game.board)
-                        print(curr_move)
-                        print(valid_moves)
-                    
+                    else: 
+                        player_clicks.clear()
+                        continue
+                        
                     # check if the current move is valid.
                     if curr_move in valid_moves: 
                         game.make_move(curr_move)
@@ -96,8 +97,9 @@ def main():
 
                     player_clicks.clear()
 
-        if move_made and player_clicks: 
+        if move_made: 
             valid_moves = game.get_valid_moves()
+            print(valid_moves)
             move_made = False
 
         draw_game(WINDOW, game)
