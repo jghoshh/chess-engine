@@ -40,6 +40,12 @@ class Game():
         # We need a variable to determine if the player is currently in check or not. 
         self.in_check = False
 
+        # We need a variable to determine if a checkmate has occured or not. 
+        self.check_mate = False
+
+        # We need a variable to determine if a stalemate has occured or not.
+        self.stale_mate = False
+
         # Suppose there is a pin, we need to store the pieces that are pinned, because we
         # cannot move them. 
         self.pins = []
@@ -117,7 +123,7 @@ class Game():
             if len(self.checks) == 1: 
                 valid_moves = self.get_all_moves()
 
-                # we analyze the check by getting the attacking piece, the row, and the col. 
+                # we analyze the check by getting the attacking piece, the row, and the col.
                 check_row = self.checks[0][0]
                 check_col = self.checks[0][1]
                 attacker = self.board[check_row][check_col]
@@ -145,6 +151,16 @@ class Game():
             # double check
             else: 
                 self.get_king_moves(king_row, king_col, valid_moves)
+
+            if len(valid_moves) == 0:
+                if self.in_check: 
+                    self.check_mate = True
+                else: 
+                    self.state_mate = True
+            else: 
+                # need this in case we undo we need to reset any checkmates or statemates.
+                self.check_mate = False
+                self.state_mate = False
 
         else: 
             #if the king is not in check, then all moves should be valid, minus the ones that directly lead to the king being in check, i.e. pins.
@@ -248,7 +264,7 @@ class Game():
         
         
         # for knights, it is a bit different to check for checks. A pin is not possible with a knight.
-        directions = [(-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        directions = [(-1, -2), (1, -2), (-2, -1), (-2, 1), (-1, 2), (1, 2), (2, 1), (2, -1)]
 
         for dr in directions: 
             end_row = king_row + dr[0]
@@ -357,9 +373,7 @@ class Game():
         # if a queen is pinned, we need to create two pin lists and send them to the bishop or rook move generating function. 
         # otherwise, the queen pin will be removed in the rook function and diagonal queen moves will be valid, as all bishop moves will be perceived to be valid.
         self.get_bishop_or_rook_moves(row, col, valid_move_set, rook=True)
-        print(valid_move_set)
         self.get_bishop_or_rook_moves(row, col, valid_move_set, rook=False)
-        print(valid_move_set)
 
 
     # Since both bishops and rooks follow the same algorithm to compute valid moves, for the sake of design, we will design a generic function
@@ -445,11 +459,22 @@ class Game():
         piece_colour = self.board[row][col][0]
         enemy_colour = 'w'
         if (piece_colour == enemy_colour): enemy_colour = 'b'
-       
-        directions = []
 
         if king: directions = [(-1, -1), (1, -1), (-1, 1), (1, 1), (1, 0), (0, 1), (-1, 0), (0, -1)]
         else: directions = [(-1, -2), (1, -2), (-2, -1), (-2, 1), (-1, 2), (1, 2), (2, 1), (2, -1)]
+
+        # search for knight pins.
+        if not king: 
+            piece_pinned = False
+            direction = ()
+
+            # go through the generated pins and check if the current piece is pinned.
+            pin = None
+            for pin in self.pins: 
+                if pin[0] == row and pin[1] == col: 
+                    piece_pinned = True
+                    break
+            if pin and piece_pinned: self.pins.remove(pin)
 
         for dr in directions: 
             end_row = row + dr[0]
@@ -459,8 +484,35 @@ class Game():
 
                 end_pos = self.board[end_row][end_col]
 
-                if (end_pos != '--' and end_pos[0] == enemy_colour and end_pos[1] != 'K'): 
-                    valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
-                
-                elif (end_pos == '--'):
+                # checking for knight pins.
+                if (not king and not piece_pinned): 
+
+                    if (end_pos != '--' and end_pos[0] == enemy_colour): 
                         valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
+                        
+                    elif (end_pos == '--'):
+                        valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
+                
+                # checking for valid king moves that don't result in a check. That is, the king cannot make a move that puts itself into a check.
+                elif king: 
+
+                    if end_pos[0] != piece_colour: 
+
+                        if piece_colour == 'w': self.white_king_pos = (end_row, end_col)
+                        else: self.black_king_pos = (end_row, end_col)
+
+                        self.find_pins_and_checks()
+
+                        if not self.in_check: 
+                            valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
+
+                        if piece_colour == 'w': self.white_king_pos = (row, col)
+                        else: self.black_king_pos = (row, col)
+
+                        self.find_pins_and_checks()
+
+
+
+
+
+
