@@ -4,7 +4,7 @@ import engine
 from move import Move
 
 pygame.init()
-WIDTH = HEIGHT = 650
+WIDTH = HEIGHT = 512
 DIM = 8
 SQ_SIZE = HEIGHT // DIM
 MAX_FPS = 30
@@ -76,21 +76,28 @@ def main():
                 #if the user clicked the same square twice, then we will clear the click stack and undo the player's selection of a piece.
                 if player_clicks and player_clicks[0] == (row, col):
                     player_clicks.clear()
+                    continue
                 else: 
                     #if the click is on a unique square, then we store it in the click stack.
                     player_clicks.append((row, col)) 
 
                 #if two clicks have been recognized, then we validate and make the move defined by the two clicks.
                 if (len(player_clicks) == 2):
+
+                    curr_move = None
                     
-                    if (game.board[player_clicks[0][0]][player_clicks[0][1]] != '--'):  
-                        curr_move = Move(player_clicks[0], player_clicks[1], game.board)
-                    else: 
+                    if (game.board[player_clicks[0][0]][player_clicks[0][1]] == '--' and game.board[player_clicks[1][0]][player_clicks[1][1]] == '--'):  
                         player_clicks.clear()
                         continue
-                        
+                    
+                    if (game.board[player_clicks[0][0]][player_clicks[0][1]] == '--'): 
+                        player_clicks.clear()
+                        continue
+
+                    curr_move = Move(player_clicks[0], player_clicks[1], game.board)
+
                     # check if the current move is valid.
-                    if curr_move in valid_moves: 
+                    if curr_move and curr_move in valid_moves: 
                         game.make_move(curr_move)
                         if game.move_log: print(game.move_log[-1])
                         move_made = True

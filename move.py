@@ -26,4 +26,4 @@ class Move():
         return False
 
     def __repr__(self): 
-        return COLS_TO_FILES[self.start_row] + ROW_TO_RANKS[self.start_col] + COLS_TO_FILES[self.end_row] + ROW_TO_RANKS[self.end_col]
+        return  COLS_TO_FILES[self.start_col] + ROW_TO_RANKS[self.start_row] + COLS_TO_FILES[self.end_col] + ROW_TO_RANKS[self.end_row]

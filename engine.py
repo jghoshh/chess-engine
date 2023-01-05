@@ -66,6 +66,7 @@ class Game():
             self.board[move.start_row][move.start_col] = move.piece_moved
             self.board[move.end_row][move.end_col] = move.piece_captured
             self.white_to_move = not self.white_to_move
+
             # update king positions.
             if (move.piece_moved == 'wK'):
                 self.white_king_pos = (move.start_row, move.start_col)
@@ -139,7 +140,7 @@ class Game():
                             break
                     
                     # filter all the valid moves such that only the moves that end up in the valid cells remain.
-                    valid_moves = set(filter(lambda move: move.piece_moved[1] == 'K' or ((move.end_row, move.end_col) in valid_cells)), valid_moves)
+                    valid_moves = set(filter(lambda move: move.piece_moved[1] == 'K' or ((move.end_row, move.end_col) in valid_cells), valid_moves))
                     
             # double check
             else: 
@@ -265,52 +266,75 @@ class Game():
         self.pins = pins
         self.checks = checks
 
-
     def get_pawn_moves(self, row, col, valid_move_set): 
+
+        # logic to ensure that pinned pawns cannot move.
+        piece_pinned = False
+        direction = ()
+
+        # go through the generated pins and check if the current piece is pinned.
+        pin = None
+        for pin in self.pins: 
+            if pin[0] == row and pin[1] == col: 
+                piece_pinned = True
+                direction = (pin[2], pin[3])
+                break
+
+        if pin and piece_pinned: self.pins.remove(pin)
+
         # if it is white's turn to move, then we will compute the valid moves of the white pawns.
         if self.white_to_move: 
             
             # Navigating to empty squares. No captures are considered here.
             if self.board[row-1][col] == '--': # Moving one step in general.
-                valid_move_set.add(Move((row, col), (row-1, col), self.board))
 
-                if row == 6 and self.board[row-2][col] == '--': # Moving two steps from the start.
-                    valid_move_set.add(Move((row, col), (row-2, col), self.board))
+                # if the piece is not pinned, or if the pin is in the natural direction that the piece moves in,
+                # then moving the piece is OK.
+                if not piece_pinned or direction == (-1, 0):
+                    valid_move_set.add(Move((row, col), (row-1, col), self.board))
+
+                    if row == 6 and self.board[row-2][col] == '--': # Moving two steps from the start.
+                        valid_move_set.add(Move((row, col), (row-2, col), self.board))
 
             # Now, we consider captures. 
             # Consider captures to the left: 
             if row > 0 and col - 1 >= 0: 
                 # if there is an enemy piece to capture to the left.
-                if self.board[row-1][col-1][0] == 'b' and self.board[row-1][col-1][1] != 'K': 
-                    valid_move_set.add(Move((row, col), (row-1, col-1), self.board))
+                if self.board[row-1][col-1][0] == 'b': 
+                    if not piece_pinned or direction == (-1, -1): 
+                        valid_move_set.add(Move((row, col), (row-1, col-1), self.board))
 
             # Consider captures to the right: 
             if row > 0 and col + 1 <= len(self.board) - 1:  
                 # if there is an enemy piece to capture to the right.
-                if self.board[row-1][col+1][0] == 'b' and self.board[row-1][col+1][1] != 'K': 
-                    valid_move_set.add(Move((row, col), (row-1, col+1), self.board))
+                if self.board[row-1][col+1][0] == 'b': 
+                    if not piece_pinned or direction == (-1, 1): 
+                        valid_move_set.add(Move((row, col), (row-1, col+1), self.board))
 
         # if it not white's turn, we consider black pawn moves. 
         else: 
             # Navigating to empty squares. No captures are considered here.
             if self.board[row+1][col] == '--': # Moving one step in general.
-                valid_move_set.add(Move((row, col), (row+1, col), self.board))
+                if not piece_pinned or direction == (1, 0):
+                    valid_move_set.add(Move((row, col), (row+1, col), self.board))
 
-                if row == 1 and self.board[row+2][col] == '--': # Moving two steps from the start.
-                    valid_move_set.add(Move((row, col), (row+2, col), self.board))
+                    if row == 1 and self.board[row+2][col] == '--': # Moving two steps from the start.
+                        valid_move_set.add(Move((row, col), (row+2, col), self.board))
 
             # Now, we consider captures. 
             # Consider captures to the left: 
             if row < len(self.board) - 1 and col - 1 >= 0: 
                 # if there is an enemy piece to capture to the left.
-                if self.board[row+1][col-1][0] == 'w' and self.board[row+1][col-1][1] != 'K': 
-                    valid_move_set.add(Move((row, col), (row+1, col-1), self.board))
+                if self.board[row+1][col-1][0] == 'w':
+                    if not piece_pinned or direction == (1, -1): 
+                        valid_move_set.add(Move((row, col), (row+1, col-1), self.board))
 
             # Consider captures to the right: 
             if row < len(self.board) - 1 and col + 1 <= len(self.board) - 1:  
                 # if there is an enemy piece to capture to the right.
-                if self.board[row+1][col+1][0] == 'w' and self.board[row+1][col+1][0] != 'K': 
-                    valid_move_set.add(Move((row, col), (row+1, col+1), self.board))
+                if self.board[row+1][col+1][0] == 'w':
+                    if not piece_pinned or direction == (1, 1): 
+                        valid_move_set.add(Move((row, col), (row+1, col+1), self.board))
 
 
     def get_rook_moves(self, row, col, valid_move_set): 
@@ -336,6 +360,21 @@ class Game():
     # Since both bishops and rooks follow the same algorithm to compute valid moves, for the sake of design, we will design a generic function
     # that is controlled by a flag variable indicating whether is the bishop or the rook's moves which need to be computed. 
     def get_bishop_or_rook_moves(self, row, col, valid_move_set, rook=True): 
+        # logic to ensure that pinned rooks cannot move.
+        piece_pinned = False
+        direction = ()
+
+        # go through the generated pins and check if the current piece is pinned.
+        pin = None
+        for pin in self.pins: 
+            if pin[0] == row and pin[1] == col: 
+                piece_pinned = True
+                print(piece_pinned)
+                direction = (pin[2], pin[3])
+                if (self.board[row][col][1] != 'Q'): 
+                    break
+        if pin and piece_pinned: self.pins.remove(pin)
+
 
         piece_colour = self.board[row][col][0]
         enemy_colour = 'w'
@@ -365,10 +404,12 @@ class Game():
                 # if the end_row and end_col are within the bounds of the board, then this move is possibly valid.
                 if (end_row < len(self.board) and end_row >= 0 and end_col < len(self.board) and end_col >= 0): 
 
-                    # now, we need to check if a piece is sitting on the position that we are supposedly moving to.
-                    end_pos = self.board[end_row][end_col]
+                    if not piece_pinned or direction == dr or direction == (-dr[0], -dr[1]): 
 
-                    if (end_pos != '--' and end_pos[0] == enemy_colour): 
+                    # now, we need to check if a piece is sitting on the position that we are supposedly moving to.
+                        end_pos = self.board[end_row][end_col]
+
+                        if (end_pos != '--' and end_pos[0] == enemy_colour): 
 
                         # if we encounter an enemy piece in this direction and with so many steps, 
                         # then we will consider this move valid, but we will inspect other directions 
@@ -378,16 +419,16 @@ class Game():
                         # Furthermore, we will also need to check if this enemy piece if a king, because 
                         # a king cannot be captured by another piece. 
 
-                        valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
-                        break
+                            valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
+                            break
 
                     # empty positions are always valid moves (if we are not jumping over a piece).
-                    elif (end_pos == '--'):
-                        valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
+                        elif (end_pos == '--'):
+                            valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
 
                     # we encounter a king or a friendly piece -- look in another direction.
-                    else: 
-                        break
+                        else: 
+                            break
 
                 # we have gone off-board. There is no need to look in this direction anymore -- look in another direction.
                 else: 
