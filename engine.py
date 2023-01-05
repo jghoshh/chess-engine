@@ -246,6 +246,7 @@ class Game():
                             # if the first enemy piece in this direction, is not a valid attacker, i.e. they cannot apply a check from where they are, then don't check this direction further.
                             break
         
+        
         # for knights, it is a bit different to check for checks. A pin is not possible with a knight.
         directions = [(-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
@@ -353,8 +354,12 @@ class Game():
 
 
     def get_queen_moves(self, row, col, valid_move_set): 
+        # if a queen is pinned, we need to create two pin lists and send them to the bishop or rook move generating function. 
+        # otherwise, the queen pin will be removed in the rook function and diagonal queen moves will be valid, as all bishop moves will be perceived to be valid.
         self.get_bishop_or_rook_moves(row, col, valid_move_set, rook=True)
+        print(valid_move_set)
         self.get_bishop_or_rook_moves(row, col, valid_move_set, rook=False)
+        print(valid_move_set)
 
 
     # Since both bishops and rooks follow the same algorithm to compute valid moves, for the sake of design, we will design a generic function
@@ -363,17 +368,17 @@ class Game():
         # logic to ensure that pinned rooks cannot move.
         piece_pinned = False
         direction = ()
+        queen_check = rook and self.board[row][col][1] == 'Q'
 
         # go through the generated pins and check if the current piece is pinned.
         pin = None
         for pin in self.pins: 
             if pin[0] == row and pin[1] == col: 
                 piece_pinned = True
-                print(piece_pinned)
                 direction = (pin[2], pin[3])
-                if (self.board[row][col][1] != 'Q'): 
+                if (queen_check): 
                     break
-        if pin and piece_pinned: self.pins.remove(pin)
+        if pin and piece_pinned and not queen_check: self.pins.remove(pin)
 
 
         piece_colour = self.board[row][col][0]
@@ -459,20 +464,3 @@ class Game():
                 
                 elif (end_pos == '--'):
                         valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
-
-
-    
-
-
-
-
-
-
-
-        
-
-
-
-
-
-

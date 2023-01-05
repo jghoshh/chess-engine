@@ -76,7 +76,6 @@ def main():
                 #if the user clicked the same square twice, then we will clear the click stack and undo the player's selection of a piece.
                 if player_clicks and player_clicks[0] == (row, col):
                     player_clicks.clear()
-                    continue
                 else: 
                     #if the click is on a unique square, then we store it in the click stack.
                     player_clicks.append((row, col)) 
@@ -85,28 +84,23 @@ def main():
                 if (len(player_clicks) == 2):
 
                     curr_move = None
+                    first_click_pos = game.board[player_clicks[0][0]][player_clicks[0][1]]
+                    second_click_pos = game.board[player_clicks[1][0]][player_clicks[1][1]]
                     
-                    if (game.board[player_clicks[0][0]][player_clicks[0][1]] == '--' and game.board[player_clicks[1][0]][player_clicks[1][1]] == '--'):  
-                        player_clicks.clear()
-                        continue
-                    
-                    if (game.board[player_clicks[0][0]][player_clicks[0][1]] == '--'): 
-                        player_clicks.clear()
-                        continue
+                    if (not first_click_pos == '--' and not (first_click_pos == '--' and second_click_pos == '--')): 
+                        
+                        curr_move = Move(player_clicks[0], player_clicks[1], game.board)
 
-                    curr_move = Move(player_clicks[0], player_clicks[1], game.board)
-
-                    # check if the current move is valid.
-                    if curr_move and curr_move in valid_moves: 
-                        game.make_move(curr_move)
-                        if game.move_log: print(game.move_log[-1])
-                        move_made = True
+                        # check if the current move is valid.
+                        if curr_move and curr_move in valid_moves: 
+                            game.make_move(curr_move)
+                            if game.move_log: print(game.move_log[-1])
+                            move_made = True
 
                     player_clicks.clear()
 
         if move_made: 
             valid_moves = game.get_valid_moves()
-            print(valid_moves)
             move_made = False
 
         draw_game(WINDOW, game)
