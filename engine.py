@@ -599,7 +599,6 @@ class Game():
         # As such, we do not need a check for that in the functions.
         if self.board[row][col+1] == '--' and self.board[row][col+2] == '--': 
             if not self.cell_under_attack(row, col+1) and not self.cell_under_attack(row, col+2): 
-                curr_move = Move((row, col), (row, col+2), self.board, castling_move=True)
                 set_to_return.add(Move((row, col), (row, col+2), self.board, castling_move=True))
 
         return set_to_return
@@ -643,30 +642,3 @@ class Game():
                 self.find_pins_and_checks()
 
         return to_return
-                
-
-
-
-
-
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
