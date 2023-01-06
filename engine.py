@@ -3,7 +3,6 @@ from move import Move
 from castle_check import CastleCheck
 from copy import deepcopy
 from collections import deque
-import numpy as np
 
 ### This class defines and records the state of the chess game being played.
 class Game():
