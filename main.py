@@ -26,8 +26,8 @@ def draw_game(surface, game):
     draw_board(surface, game.board)
 
 def draw_board(surface, board): 
-    light = (207, 167, 110) 
-    dark = (107, 37, 4)
+    light = (254, 203, 153) 
+    dark = (204, 152, 102)
     curr = light
 
     for i in range(DIM): 
@@ -91,8 +91,11 @@ def main():
 
                         curr_move = Move(player_clicks[0], player_clicks[1], game.board)
 
-                        # check if the current move is valid.
+                        if curr_move.piece_moved[1] == 'K' and (abs(curr_move.end_col - curr_move.start_col) == 2) and (curr_move.start_row == curr_move.end_row): 
+                            curr_move.castling_move = True
+
                         if curr_move and curr_move in valid_moves: 
+                            #we have to make it a castling move.
                             game.make_move(curr_move)
                             if game.move_log: print(game.move_log[-1])
                             move_made = True

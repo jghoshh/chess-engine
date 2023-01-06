@@ -1,5 +1,7 @@
 ### MODULE RESPONSIBLE FOR HANDLING THE BACKEND OF THE CHESS GAME.
 from move import Move
+from castle_check import CastleCheck
+from copy import deepcopy
 from collections import deque
 import numpy as np
 
@@ -53,17 +55,37 @@ class Game():
         # Store the positions where the opponent has a piece that is checking the player's king.
         self.checks = []
 
+        # We need a variable to determine if any castling rule has been broken.
+        self.current_castling_check = CastleCheck(True, True, True, True)
+
+        # We need a variable to keep track of the moves that affect castling rules.
+        self.castling_check_log = deque()
+        self.castling_check_log.append(deepcopy(self.current_castling_check))
 
     # Function to make the move. 
     def make_move(self, move): 
-        if move.piece_moved != None: 
-            self.board[move.end_row][move.end_col] = move.piece_moved
-            self.board[move.start_row][move.start_col] = "--"
-            self.move_log.append(move)
-            self.white_to_move = not self.white_to_move
-            # update king positions.
-            if (move.piece_moved == 'wK'): self.white_king_pos = (move.end_row, move.end_col)
-            elif (move.piece_moved == 'bK'): self.black_king_pos = (move.end_row, move.end_col)
+
+        if move.piece_moved != None:
+                print(move.piece_moved)
+                self.board[move.end_row][move.end_col] = move.piece_moved
+                self.board[move.start_row][move.start_col] = "--"
+                self.move_log.append(move)
+                self.white_to_move = not self.white_to_move
+
+                if (move.piece_moved == 'wK'): self.white_king_pos = (move.end_row, move.end_col)
+                elif (move.piece_moved == 'bK'): self.black_king_pos = (move.end_row, move.end_col)
+
+                if move.castling_move: 
+                    # kingside castle.
+                    if (move.end_col - move.start_col) == 2:
+                        self.board[move.end_row][move.end_col - 1] = self.board[move.end_row][move.end_col + 1]
+                        self.board[move.end_row][move.end_col + 1] = '--'
+                    else: 
+                        self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 2]
+                        self.board[move.end_row][move.end_col - 2] = '--'
+
+                self.update_castle_check(move)
+                self.castling_check_log.append(CastleCheck(self.current_castling_check.wks, self.current_castling_check.bks, self.current_castling_check.wqs, self.current_castling_check.bqs))
 
     # Function to reverse/undo the most recent move. 
     def undo_move(self): 
@@ -78,10 +100,27 @@ class Game():
                 self.white_king_pos = (move.start_row, move.start_col)
             elif (move.piece_moved == 'bK'): 
                 self.black_king_pos = (move.start_row, move.start_col)
+            
+            #undo castle move.
+            if move.castling_move: 
+                #kingside undo.
+                if (move.end_col - move.start_col) == 2: 
+                    self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 1]
+                    self.board[move.end_row][move.end_col - 1] = '--'
+                #queenside undo.
+                else: 
+                    self.board[move.end_row][move.end_col - 2] = self.board[move.end_row][move.end_col + 1]
+                    self.board[move.end_row][move.end_col + 1] = '--'
 
+            self.castling_check_log.pop()
+            most_recent_castle_state = self.castling_check_log[-1]
+            self.current_castling_check.wks, self.current_castling_check.wqs, self.current_castling_check.bks, self.current_castling_check.bqs = most_recent_castle_state.wks, most_recent_castle_state.wqs, most_recent_castle_state.bks, most_recent_castle_state.bqs
 
     # Function to get all possible moves, without considering any checks. 
     def get_all_moves(self):
+
+        if self.white_to_move: king_row, king_col = self.white_king_pos
+        else: king_row, king_col = self.black_king_pos
 
         all_moves = set()
 
@@ -92,8 +131,8 @@ class Game():
                 
                 if piece != '--' and ((piece[0] == 'w' and self.white_to_move) or (piece[0] == 'b' and not self.white_to_move)): 
                     self.move_functions[piece[1]](i, j, all_moves)
-
-        return all_moves
+        
+        return self.get_castle_moves(king_row, king_col, all_moves)
                     
     # Function to get all possible moves, with considering checks. These are valid moves. 
     def get_valid_moves(self): 
@@ -101,6 +140,7 @@ class Game():
         valid_moves = set()
         valid_cells = set()
         self.find_pins_and_checks()
+
         if self.white_to_move: king_row, king_col = self.white_king_pos
         else: king_row, king_col = self.black_king_pos
         
@@ -156,13 +196,45 @@ class Game():
 
         return valid_moves
 
+    
+    def update_castle_check(self, move): 
+        if move.piece_moved == 'wK': 
+            self.current_castling_check.wks = False
+            self.current_castling_check.wqs = False
+            
+        elif move.piece_moved == 'bK': 
+            self.current_castling_check.bks = False
+            self.current_castling_check.bqs = False
 
+        elif move.piece_moved == 'wR': 
+            if move.start_row == 7 and move.start_col == 0: 
+                self.current_castling_check.wqs = False
+            elif move.start_row == 7 and move.start_col == 7: 
+                self.current_castling_check.wks = False
 
+        elif move.piece_moved == 'bR': 
+            if move.start_row == 0 and move.start_col == 0: 
+                self.current_castling_check.bqs = False
+            elif move.start_row == 0 and move.start_col == 7: 
+                self.current_castling_check.bks = False
+
+        if move.piece_captured == 'wR':
+            if move.end_row == 7 and move.end_col == 0: 
+                self.current_castling_check.wqs = False
+            elif move.end_row == 7 and move.end_col == 7:
+                self.current_castling_check.wks = False
+
+        elif move.piece_captured == 'bR':
+            if move.end_row == 0 and move.end_col == 0: 
+                self.current_castling_check.bqs = False
+            elif move.end_row == 0 and move.end_col == 7:
+                self.current_castling_check.bks = False
+
+        
     def find_pins_and_checks(self): 
 
         # first, determine whose turn it is, what the player colour is, what the opponent colour is, 
         # and where the player's king is located.
-
         enemy_colour = 'w'
         piece_colour = 'b'
         king_row, king_col = self.black_king_pos
@@ -464,6 +536,7 @@ class Game():
                     break
             if pin and piece_pinned: self.pins.remove(pin)
 
+
         for dr in directions: 
             end_row = row + dr[0]
             end_col = col + dr[1]
@@ -498,6 +571,99 @@ class Game():
                         else: self.black_king_pos = (row, col)
 
                         self.find_pins_and_checks()
+    
+    def get_castle_moves(self, row, col, valid_move_set): 
+        # if we are already in check, then we cannot castle.
+        ks_castles, qs_castles = None, None
+
+        if self.in_check: 
+            return None
+
+        if (self.white_to_move and self.current_castling_check.wks) or (not self.white_to_move and self.current_castling_check.bks):
+            ks_castles = self.get_kingside_castles(row, col, valid_move_set)
+
+        if (self.white_to_move and self.current_castling_check.wqs) or (not self.white_to_move and self.current_castling_check.bqs):
+            qs_castles = self.get_queenside_castles(row, col, valid_move_set)
+        
+        if (ks_castles and len(ks_castles) > 0): 
+            valid_move_set = valid_move_set.union(ks_castles)
+        if (qs_castles and len(qs_castles) > 0):
+            valid_move_set = valid_move_set.union(qs_castles)
+        
+        return valid_move_set
+
+
+    def get_kingside_castles(self, row, col, valid_move_set): 
+        set_to_return = set()
+        # Note that we will only call this and the get queenside castles functions if the white king hasn't been moved
+        # As such, we do not need a check for that in the functions.
+        if self.board[row][col+1] == '--' and self.board[row][col+2] == '--': 
+            if not self.cell_under_attack(row, col+1) and not self.cell_under_attack(row, col+2): 
+                curr_move = Move((row, col), (row, col+2), self.board, castling_move=True)
+                set_to_return.add(Move((row, col), (row, col+2), self.board, castling_move=True))
+
+        return set_to_return
+
+
+    def get_queenside_castles(self, row, col, valid_move_set):
+        set_to_return = set()
+
+        if self.board[row][col - 1] == '--' and self.board[row][col - 2] == '--' and self.board[row][col - 3] == '--': 
+            if not self.cell_under_attack(row, col-1) and not self.cell_under_attack(row, col-2): 
+                set_to_return.add(Move((row, col), (row, col-2), self.board, castling_move=True))
+        return set_to_return
+
+
+    # Expensive operation. Use it wisely.
+    def cell_under_attack(self, row, col): 
+
+        to_return = False
+        piece_colour = 'b'
+
+        if self.white_to_move: 
+            piece_colour = 'w'
+        
+        if (row < len(self.board) and row >= 0 and col < len(self.board) and col >= 0):
+
+            end_pos = self.board[row][col]
+
+            if end_pos[0] != piece_colour:
+
+                if piece_colour == 'w': self.white_king_pos = (row, col)
+                else: self.black_king_pos = (row, col)
+
+                self.find_pins_and_checks()
+
+                if self.in_check: 
+                    to_return = True
+
+                if piece_colour == 'w': self.white_king_pos = (row, col)
+                else: self.black_king_pos = (row, col)
+
+                self.find_pins_and_checks()
+
+        return to_return
+                
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
