@@ -613,6 +613,7 @@ class Game():
 
 
     # Expensive operation. Use it wisely.
+    # Find if a specific cell is under attack. Used to check if the adjacent cells to a king's home position are under attack or not for castling.
     def cell_under_attack(self, row, col): 
 
         to_return = False
