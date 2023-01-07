@@ -188,7 +188,6 @@ class Game():
             if len(valid_moves) == 0:
                 if self.in_check: 
                     self.check_mate = True
-                    print("checkmate")
                 else: 
                     self.state_mate = True
 
@@ -597,6 +596,7 @@ class Game():
         
         if (ks_castles and len(ks_castles) > 0): 
             valid_move_set = valid_move_set.union(ks_castles)
+
         if (qs_castles and len(qs_castles) > 0):
             valid_move_set = valid_move_set.union(qs_castles)
 
