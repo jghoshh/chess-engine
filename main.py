@@ -63,8 +63,8 @@ def main():
 
     # need a two variables to denote which position the AI will be playing and which position the player will be playing.
     # whatever colour human plays is white, and whatever colour the AI plays will be black.
-    white = True
-    black = True 
+    white = False
+    black = False
     undo = False
     game_over = False
 
