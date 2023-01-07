@@ -35,6 +35,7 @@ def find_good_move(game, valid_move_set):
     ### Function to generate a "better" move for the AI based on an implementation of the minmax algorithm. This follows the recursive version of the minmax algorithm.
     ### Currently, the function is inefficient, but once alpha-beta pruning is implemented the function will run a lot faster. 
     def find_move_minmax(valid_move_set, depth, alpha, beta, maximizing_player): 
+
     # base case is if we have looked as many moves as possible ahead, as specified by the depth parameter.
         if depth == 0: 
             return score_board(game)
@@ -70,7 +71,7 @@ def find_good_move(game, valid_move_set):
                 # then we don't need to inspect any other valid moves, because
                 # our opponent will not less us cast this move. 
                 if beta <= alpha: 
-                    break
+                   break
 
             return max_score
 
@@ -88,7 +89,7 @@ def find_good_move(game, valid_move_set):
 
                 #alpha-beta pruning
                 beta = min(beta, min_score)
-                # if our opponent's best move so far is better than our best move,
+                # if our opponent's best move so far is better than our best move,  
                 # then we don't need to inspect any other valid moves, because
                 # our opponent will not less us cast this move. 
                 if beta <= alpha: 
