@@ -16,7 +16,7 @@ class Game():
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "bN", "--", "--"],
         ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
         ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"], 
         ]
@@ -175,7 +175,7 @@ class Game():
                             break
                     
                     # filter all the valid moves such that only the moves that end up in the valid cells remain.
-                    valid_moves = set(filter(lambda move: move.piece_moved[1] == 'K' or ((move.end_row, move.end_col) in valid_cells), valid_moves))
+                valid_moves = set(filter(lambda move: move.piece_moved[1] == 'K' or ((move.end_row, move.end_col) in valid_cells), valid_moves))
                     
             # double check
             else: 
@@ -187,7 +187,7 @@ class Game():
                     print("checkmate")
                 else: 
                     self.state_mate = True
-                    
+
             else: 
                 # need this in case we undo we need to reset any checkmates or statemates.
                 self.check_mate = False
@@ -491,7 +491,7 @@ class Game():
                     # now, we need to check if a piece is sitting on the position that we are supposedly moving to.
                         end_pos = self.board[end_row][end_col]
 
-                        if (end_pos != '--' and end_pos[0] == enemy_colour): 
+                        if (end_pos != '--' and end_pos[0] == enemy_colour and end_pos[1] != 'K'): 
 
                         # if we encounter an enemy piece in this direction and with so many steps, 
                         # then we will consider this move valid, but we will inspect other directions 
@@ -551,7 +551,7 @@ class Game():
                 # checking for knight pins.
                 if (not king and not piece_pinned): 
 
-                    if (end_pos != '--' and end_pos[0] == enemy_colour): 
+                    if (end_pos != '--' and end_pos[0] == enemy_colour and end_pos[1] != 'K'): 
                         valid_move_set.add(Move((row, col), (end_row, end_col), self.board))
                         
                     elif (end_pos == '--'):
@@ -560,7 +560,7 @@ class Game():
                 # checking for valid king moves that don't result in a check. That is, the king cannot make a move that puts itself into a check.
                 elif king: 
 
-                    if end_pos[0] != piece_colour: 
+                    if end_pos[0] != piece_colour and end_pos[1] != 'K': 
 
                         if piece_colour == 'w': self.white_king_pos = (end_row, end_col)
                         else: self.black_king_pos = (end_row, end_col)

@@ -1,13 +1,14 @@
 ### MAIN MODULE RESPONSIBLE FOR HANDLING USER INPUT AND RUNNING THE CHESS GAME.
 import pygame 
 import engine
+from the_ai import find_random_move, find_good_move
 from move import Move
 
 pygame.init()
 WIDTH = HEIGHT = 512
 DIM = 8
 SQ_SIZE = HEIGHT // DIM
-MAX_FPS = 15
+MAX_FPS = 5
 IMGS = {}
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 CLOCK = pygame.time.Clock()
@@ -20,30 +21,6 @@ def load_images(board):
             if col != "--": 
                 # We are storing the images alongisde its supposed size in the board.
                 IMGS[col] = pygame.transform.smoothscale(pygame.image.load(f"images/{col}.png"), (SQ_SIZE, SQ_SIZE))
-
-
-### bug in this function. Not worth the time to fix.
-### Function to highlight the initial square selected and all valid moves given a piece.
-# def highlight(surface, game, valid_move_set, selected_cell): 
-
-#     if selected_cell: 
-#         row, col = selected_cell
-
-#         if (game.white_to_move and game.board[row][col][0] == 'w') or (not game.white_to_move and game.board[row][col][0] == 'b'): 
-            
-#             # prepare and draw the blue highlight on the selected square.
-#             s = pygame.Surface((SQ_SIZE, SQ_SIZE))
-#             s.set_alpha(10)
-#             s.fill(pygame.Color('blue'))
-#             surface.blit(s, (col*SQ_SIZE, row*SQ_SIZE))
-            
-#             # prepare the surface for yellow highlights on valid_moves.
-#             s.fill(pygame.Color('yellow'))
-
-#             # draw the yellow highlights on the valid moves. 
-#             for move in valid_move_set: 
-#                 if move.start_row == row and move.start_col == col: 
-#                     surface.blit(s, (move.end_col * SQ_SIZE, move.end_row * SQ_SIZE))
 
 
 ### Function to draw the board and pieces.
@@ -84,7 +61,16 @@ def main():
     # the current cell that is selected -- used for highlighting purposes.
     cell_selected = ()
 
+    # need a two variables to denote which position the AI will be playing and which position the player will be playing.
+    # whatever colour human plays is white, and whatever colour the AI plays will be black.
+    white = True
+    black = True 
+    undo = False
+    game_over = False
+
     while run: 
+        # to check if it is the human's turn.
+        human = (game.white_to_move and white) or (not game.white_to_move and black)
 
         for event in pygame.event.get(): 
 
@@ -96,65 +82,80 @@ def main():
                 # Looking out for presses in the 'z' key.
                 if event.key == pygame.K_z:
                     game.undo_move()
-                    move_made = True
+                    move_made = True                   
                 
                 # Looking out for presses in the 'r' key.
                 if event.key == pygame.K_r:
                     game = engine.Game()
                     valid_moves = game.get_valid_moves()
                     player_clicks.clear()
+                    game_over = False
 
             # Mouse button handlers.
             elif event.type == pygame.MOUSEBUTTONDOWN: 
                 #first, get the matrix-indexed format of the position that the user clicked.
-                x, y = pygame.mouse.get_pos()
-                col = x//SQ_SIZE 
-                row = y//SQ_SIZE
-                cell_selected = (row, col)
+                if human and not game_over: 
+                    x, y = pygame.mouse.get_pos()
+                    col = x//SQ_SIZE 
+                    row = y//SQ_SIZE
+                    cell_selected = (row, col)
 
-                #if the user clicked the same square twice, then we will clear the click stack and undo the player's selection of a piece.
-                if player_clicks and player_clicks[0] == (row, col):
-                    player_clicks.clear()
-                else: 
-                    #if the click is on a unique square, then we store it in the click stack.
-                    player_clicks.append((row, col)) 
+                    #if the user clicked the same square twice, then we will clear the click stack and undo the player's selection of a piece.
+                    if player_clicks and player_clicks[0] == (row, col):
+                        player_clicks.clear()
+                    else: 
+                        #if the click is on a unique square, then we store it in the click stack.
+                        player_clicks.append((row, col)) 
 
-                #if two clicks have been recognized, then we validate and make the move defined by the two clicks.
-                if (len(player_clicks) == 2):
+                    #if two clicks have been recognized, then we validate and make the move defined by the two clicks.
+                    if (len(player_clicks) == 2):
 
-                    curr_move = None
-                    first_click_pos = game.board[player_clicks[0][0]][player_clicks[0][1]]
-                    second_click_pos = game.board[player_clicks[1][0]][player_clicks[1][1]]
-                    
-                    if (not first_click_pos == '--' or not second_click_pos == '--'): 
+                        curr_move = None
+                        first_click_pos = game.board[player_clicks[0][0]][player_clicks[0][1]]
+                        second_click_pos = game.board[player_clicks[1][0]][player_clicks[1][1]]
+                        
+                        if (not first_click_pos == '--' or not second_click_pos == '--'): 
 
-                        curr_move = Move(player_clicks[0], player_clicks[1], game.board)
+                            curr_move = Move(player_clicks[0], player_clicks[1], game.board)
 
-                        if curr_move.piece_moved[1] == 'K' and (abs(curr_move.end_col - curr_move.start_col) == 2) and (curr_move.start_row == curr_move.end_row): 
-                            curr_move.castling_move = True
+                            if curr_move.piece_moved[1] == 'K' and (abs(curr_move.end_col - curr_move.start_col) == 2) and (curr_move.start_row == curr_move.end_row): 
+                                curr_move.castling_move = True
 
-                        if curr_move and curr_move in valid_moves: 
-                            #we have to make it a castling move.
-                            game.make_move(curr_move)
-                            if game.move_log: print(game.move_log[-1])
-                            move_made = True
+                            if curr_move and curr_move in valid_moves: 
+                                #we have to make it a castling move.
+                                game.make_move(curr_move)
+                                if game.move_log: print(game.move_log[-1])
+                                move_made = True
 
-                    player_clicks.clear()
-
+                        player_clicks.clear()
+        
         if move_made: 
             valid_moves = game.get_valid_moves()
             move_made = False
 
-        draw_board(WINDOW, game)
+        # AI move making. 
+        if not human and not game_over:
+            AI_move = find_good_move(game, valid_moves)
+            if not AI_move: 
+                AI_move = find_random_move(valid_moves)
+            game.make_move(AI_move)
+            if game.move_log: print(game.move_log[-1])
+            move_made = True
 
-        if game.stale_mate:
+        draw_board(WINDOW, game)
+        
+        stale_mate_check = len(game.move_log) >= 8 and (game.move_log[-1] == game.move_log[-5]) and (game.move_log[-2] and game.move_log[-6]) and (game.move_log[-3] and game.move_log[-7]) and (game.move_log[-4] and game.move_log[-8])
+        if game.stale_mate or stale_mate_check:
             draw_result(WINDOW, "Stalemate. 'R' to play again.")
+            game_over = True
 
         elif game.check_mate:
             if game.white_to_move: 
                 draw_result(WINDOW, "Black wins by checkmate! 'R' to play again.")
+                game_over = True
             else: 
                 draw_result(WINDOW, "White wins by checkmate! 'R' to play again.")
+                game_over = True
 
         CLOCK.tick(MAX_FPS)
         pygame.display.update()
