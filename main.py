@@ -8,7 +8,7 @@ pygame.init()
 WIDTH = HEIGHT = 512
 DIM = 8
 SQ_SIZE = HEIGHT // DIM
-MAX_FPS = 15
+MAX_FPS = 30
 IMGS = {}
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 CLOCK = pygame.time.Clock()
@@ -136,7 +136,6 @@ def main():
         # AI move making. 
         if not human and not game_over:
             AI_move = find_good_move(game, valid_moves)
-            print(AI_move)
             if not AI_move: 
                 AI_move = find_random_move(valid_moves)
             game.make_move(AI_move)

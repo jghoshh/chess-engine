@@ -17,7 +17,7 @@ from functools import cache, lru_cache
 # current best moves, then we do not inspect that branch any further and thus "prune" it.
 
 PIECE_SCORE = {"K": 0, "Q": 10, "R": 5, "B": 3, "K": 3, "P": 1}
-CHECKMATE = 1000
+CHECKMATE = 10000
 STALEMATE = 0
 
 # for depth of the game tree -- essentially, how many moves the AI will look forward.
@@ -34,7 +34,7 @@ def find_good_move(game, valid_move_set):
 
     ### Function to generate a "better" move for the AI based on an implementation of the minmax algorithm. This follows the recursive version of the minmax algorithm.
     ### Currently, the function is inefficient, but once alpha-beta pruning is implemented the function will run a lot faster. 
-    def find_move_minmax(game, valid_move_set, depth, maximizing_player): 
+    def find_move_minmax(valid_move_set, depth, maximizing_player): 
     # base case is if we have looked as many moves as possible ahead, as specified by the depth parameter.
         if depth == 0: 
             return score_board(game)
@@ -57,7 +57,7 @@ def find_good_move(game, valid_move_set):
             for move in valid_move_set:
                 game.make_move(move)
                 next_possible_moves = game.get_valid_moves()
-                curr_score = find_move_minmax(game, next_possible_moves, depth-1, not maximizing_player)
+                curr_score = find_move_minmax(next_possible_moves, depth-1, not maximizing_player)
                 if curr_score > max_score: 
                     max_score = curr_score
                     if depth == DEPTH: 
@@ -70,7 +70,7 @@ def find_good_move(game, valid_move_set):
             for move in valid_move_set:
                 game.make_move(move)
                 next_possible_moves = game.get_valid_moves()
-                curr_score = find_move_minmax(game, next_possible_moves, depth-1, not maximizing_player)
+                curr_score = find_move_minmax(next_possible_moves, depth-1, not maximizing_player)
                 if curr_score < min_score: 
                     min_score = curr_score
                     if depth == DEPTH: 
@@ -78,55 +78,8 @@ def find_good_move(game, valid_move_set):
                 game.undo_move()
             return min_score
 
-    find_move_minmax(game, valid_move_set, DEPTH, game.white_to_move)
+    find_move_minmax(valid_move_set, DEPTH, game.white_to_move)
     return AI_move[0]
-
-### Function to generate a "better" move for the AI based on an implementation of the minmax algorithm. This follows the recursive version of the minmax algorithm.
-### Currently, the function is inefficient, but once alpha-beta pruning is implemented the function will run a lot faster. 
-def find_move_minmax(game, valid_move_set, depth, maximizing_player): 
-    # base case is if we have looked as many moves as possible ahead, as specified by the depth parameter.
-    if depth == 0: 
-        return score_board(game)
-    
-    # If it is currently the maximizing player's turn, then we will need to recurse down and back up the 
-    # game tree with respect to the depth parameter to find the current move that has the best chance 
-    # of maximizing our score in the future. We thus set max_score to the worst possible score we 
-    # could get as the maximizing player and iterate and recurse through all our possible current moves.
-    # once we hit the depth of the game tree, we will recurse back up to the initial call of this function
-    # and while doing so will have accounted for the maximum possible score that we could attain.
-    # This score will consequently determine what move we should play currently to be able to attain this
-    # maximized score in the future.
-    #
-    # Note that when we recurse up and down the game tree, we will not only need to calculate our 
-    # maximizing moves, but also the minimizing moves of our opponent, as they will try to take
-    # away as much as possible from our score. To predict moves into the future, we cannot only 
-    # consider our moves in a two player game. 
-
-    if maximizing_player: 
-        max_score = -CHECKMATE
-        for move in valid_move_set:
-            game.make_move(move)
-            next_possible_moves = game.get_valid_moves()
-            curr_score = find_move_minmax(game, next_possible_moves, depth-1, not maximizing_player)
-            if curr_score > max_score: 
-                max_score = curr_score
-                if depth == DEPTH: 
-                    AI_move = move
-            game.undo_move()
-        return max_score
-
-    else: 
-        min_score = CHECKMATE
-        for move in valid_move_set:
-            game.make_move(move)
-            next_possible_moves = game.get_valid_moves()
-            curr_score = find_move_minmax(game, next_possible_moves, depth-1, not maximizing_player)
-            if curr_score < min_score: 
-                min_score = curr_score
-                if depth == DEPTH: 
-                    AI_move = move
-            game.undo_move()
-        return min_score
 
 ### Function to score the board based on our piece mapping created earlier. This function defines the heuristic of our algorithm.
 def score_board(game): 
