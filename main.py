@@ -8,7 +8,7 @@ pygame.init()
 WIDTH = HEIGHT = 512
 DIM = 8
 SQ_SIZE = HEIGHT // DIM
-MAX_FPS = 30
+MAX_FPS = 15
 IMGS = {}
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 CLOCK = pygame.time.Clock()
@@ -63,7 +63,7 @@ def main():
 
     # need a two variables to denote which position the AI will be playing and which position the player will be playing.
     # whatever colour human plays is white, and whatever colour the AI plays will be black.
-    white = False
+    white = True
     black = False
     undo = False
     game_over = False
@@ -136,6 +136,7 @@ def main():
         # AI move making. 
         if not human and not game_over:
             AI_move = find_good_move(game, valid_moves)
+            print(AI_move)
             if not AI_move: 
                 AI_move = find_random_move(valid_moves)
             game.make_move(AI_move)

@@ -57,7 +57,7 @@ def find_good_move(game, valid_move_set):
             for move in valid_move_set:
                 game.make_move(move)
                 next_possible_moves = game.get_valid_moves()
-                curr_score = find_move_minmax(next_possible_moves, depth-1, not maximizing_player)
+                curr_score = find_move_minmax(next_possible_moves, depth-1, alpha, beta, not maximizing_player)
                 if curr_score > max_score: 
                     max_score = curr_score
                     if depth == DEPTH: 
@@ -79,7 +79,7 @@ def find_good_move(game, valid_move_set):
             for move in valid_move_set:
                 game.make_move(move)
                 next_possible_moves = game.get_valid_moves()
-                curr_score = find_move_minmax(next_possible_moves, depth-1, not maximizing_player)
+                curr_score = find_move_minmax(next_possible_moves, depth-1, alpha, beta, not maximizing_player)
                 if curr_score < min_score: 
                     min_score = curr_score
                     if depth == DEPTH: 
@@ -87,7 +87,7 @@ def find_good_move(game, valid_move_set):
                 game.undo_move()
 
                 #alpha-beta pruning
-                beta = min(beta, max_score)
+                beta = min(beta, min_score)
                 # if our opponent's best move so far is better than our best move,
                 # then we don't need to inspect any other valid moves, because
                 # our opponent will not less us cast this move. 
