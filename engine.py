@@ -65,7 +65,6 @@ class Game():
     def make_move(self, move): 
 
         if move.piece_moved != None:
-                print(move.piece_moved)
                 self.board[move.end_row][move.end_col] = move.piece_moved
                 self.board[move.start_row][move.start_col] = "--"
                 self.move_log.append(move)
@@ -188,6 +187,7 @@ class Game():
                     print("checkmate")
                 else: 
                     self.state_mate = True
+                    
             else: 
                 # need this in case we undo we need to reset any checkmates or statemates.
                 self.check_mate = False
@@ -580,10 +580,9 @@ class Game():
         ks_castles, qs_castles = None, None
 
         if self.in_check: 
-            return None
+            return valid_move_set
 
         if (self.white_to_move and self.current_castling_check.wks) or (not self.white_to_move and self.current_castling_check.bks):
-            print(str(row) + ", " + str(col))
             ks_castles = self.get_kingside_castles(row, col)
 
         if (self.white_to_move and self.current_castling_check.wqs) or (not self.white_to_move and self.current_castling_check.bqs):
@@ -593,9 +592,7 @@ class Game():
             valid_move_set = valid_move_set.union(ks_castles)
         if (qs_castles and len(qs_castles) > 0):
             valid_move_set = valid_move_set.union(qs_castles)
-        
-        print(self.white_to_move and self.current_castling_check.wks)
-        print(valid_move_set)
+
         return valid_move_set
 
 
