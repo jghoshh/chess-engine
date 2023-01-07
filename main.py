@@ -92,7 +92,12 @@ def main():
                         curr_move = Move(player_clicks[0], player_clicks[1], game.board)
 
                         if curr_move.piece_moved[1] == 'K' and (abs(curr_move.end_col - curr_move.start_col) == 2) and (curr_move.start_row == curr_move.end_row): 
+                            print(curr_move)
                             curr_move.castling_move = True
+
+                            print("curr_move in valid_moves:" + str(curr_move in valid_moves))
+                            print("current castling check for black kingside:" + str(game.current_castling_check.bks))
+                            print("current castling check for white kingside:" + str(game.current_castling_check.wks))
 
                         if curr_move and curr_move in valid_moves: 
                             #we have to make it a castling move.

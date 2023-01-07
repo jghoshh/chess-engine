@@ -118,8 +118,10 @@ class Game():
     # Function to get all possible moves, without considering any checks. 
     def get_all_moves(self):
 
-        if self.white_to_move: king_row, king_col = self.white_king_pos
-        else: king_row, king_col = self.black_king_pos
+        if self.white_to_move: 
+            king_row, king_col = self.white_king_pos
+        else: 
+            king_row, king_col = self.black_king_pos
 
         all_moves = set()
 
@@ -140,8 +142,10 @@ class Game():
         valid_cells = set()
         self.find_pins_and_checks()
 
-        if self.white_to_move: king_row, king_col = self.white_king_pos
-        else: king_row, king_col = self.black_king_pos
+        if self.white_to_move: 
+            king_row, king_col = self.white_king_pos
+        else: 
+            king_row, king_col = self.black_king_pos
         
         # if the king is in check,
         if self.in_check: 
@@ -579,20 +583,23 @@ class Game():
             return None
 
         if (self.white_to_move and self.current_castling_check.wks) or (not self.white_to_move and self.current_castling_check.bks):
-            ks_castles = self.get_kingside_castles(row, col, valid_move_set)
+            print(str(row) + ", " + str(col))
+            ks_castles = self.get_kingside_castles(row, col)
 
         if (self.white_to_move and self.current_castling_check.wqs) or (not self.white_to_move and self.current_castling_check.bqs):
-            qs_castles = self.get_queenside_castles(row, col, valid_move_set)
+            qs_castles = self.get_queenside_castles(row, col)
         
         if (ks_castles and len(ks_castles) > 0): 
             valid_move_set = valid_move_set.union(ks_castles)
         if (qs_castles and len(qs_castles) > 0):
             valid_move_set = valid_move_set.union(qs_castles)
         
+        print(self.white_to_move and self.current_castling_check.wks)
+        print(valid_move_set)
         return valid_move_set
 
 
-    def get_kingside_castles(self, row, col, valid_move_set): 
+    def get_kingside_castles(self, row, col): 
         set_to_return = set()
         # Note that we will only call this and the get queenside castles functions if the white king hasn't been moved
         # As such, we do not need a check for that in the functions.
@@ -602,11 +609,10 @@ class Game():
 
         return set_to_return
 
-
-    def get_queenside_castles(self, row, col, valid_move_set):
+    def get_queenside_castles(self, row, col):
         set_to_return = set()
 
-        if self.board[row][col - 1] == '--' and self.board[row][col - 2] == '--' and self.board[row][col - 3] == '--': 
+        if self.board[row][col-1] == '--' and self.board[row][col-2] == '--' and self.board[row][col-3] == '--': 
             if not self.cell_under_attack(row, col-1) and not self.cell_under_attack(row, col-2): 
                 set_to_return.add(Move((row, col), (row, col-2), self.board, castling_move=True))
         return set_to_return
@@ -618,9 +624,12 @@ class Game():
 
         to_return = False
         piece_colour = 'b'
+        start_pos = self.black_king_pos
 
         if self.white_to_move: 
             piece_colour = 'w'
+            start_pos = self.white_king_pos
+
         
         if (row < len(self.board) and row >= 0 and col < len(self.board) and col >= 0):
 
@@ -628,16 +637,20 @@ class Game():
 
             if end_pos[0] != piece_colour:
 
-                if piece_colour == 'w': self.white_king_pos = (row, col)
-                else: self.black_king_pos = (row, col)
+                if piece_colour == 'w': 
+                    self.white_king_pos = (row, col)
+                else: 
+                    self.black_king_pos = (row, col)
 
                 self.find_pins_and_checks()
 
                 if self.in_check: 
                     to_return = True
 
-                if piece_colour == 'w': self.white_king_pos = (row, col)
-                else: self.black_king_pos = (row, col)
+                if piece_colour == 'w': 
+                    self.white_king_pos = start_pos
+                else: 
+                    self.black_king_pos = start_pos
 
                 self.find_pins_and_checks()
 
