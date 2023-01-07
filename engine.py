@@ -16,13 +16,13 @@ class Game():
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "bN", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
         ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"], 
         ]
 
         # We will maintain an instance variable that checks if it is white's turn to move or not.
-        # Note, we will perceive the game from the perspective of white and only white.
+        # Note, for now, we will perceive the game from the perspective of white and only white.
         self.white_to_move = True
 
         # We will also maintain a move log, registering all the moves that occured in the game.
@@ -61,7 +61,7 @@ class Game():
         self.castling_check_log = deque()
         self.castling_check_log.append(deepcopy(self.current_castling_check))
 
-    # Function to make the move. 
+    ### Function to make a move. 
     def make_move(self, move): 
 
         if move.piece_moved != None:
@@ -85,7 +85,7 @@ class Game():
                 self.update_castle_check(move)
                 self.castling_check_log.append(CastleCheck(self.current_castling_check.wks, self.current_castling_check.bks, self.current_castling_check.wqs, self.current_castling_check.bqs))
 
-    # Function to reverse/undo the most recent move. 
+    ### Function to reverse/undo the most recent move. 
     def undo_move(self): 
         if self.move_log: 
             move = self.move_log.pop()
@@ -114,7 +114,11 @@ class Game():
             most_recent_castle_state = self.castling_check_log[-1]
             self.current_castling_check.wks, self.current_castling_check.wqs, self.current_castling_check.bks, self.current_castling_check.bqs = most_recent_castle_state.wks, most_recent_castle_state.wqs, most_recent_castle_state.bks, most_recent_castle_state.bqs
 
-    # Function to get all possible moves, without considering any checks. 
+            # anytime we undo move, we can't possibly be in checkmate or stalemate.
+            self.check_mate = False
+            self.stale_mate = False
+
+    ### Function to get all possible moves, without considering any checks. 
     def get_all_moves(self):
 
         if self.white_to_move: 
@@ -134,7 +138,7 @@ class Game():
         
         return self.get_castle_moves(king_row, king_col, all_moves)
                     
-    # Function to get all possible moves, with considering checks. These are valid moves. 
+    ### Function to get all possible moves, while considering checks. Returns all possible, valid moves.
     def get_valid_moves(self): 
 
         valid_moves = set()
@@ -194,12 +198,12 @@ class Game():
                 self.state_mate = False
 
         else: 
-            #if the king is not in check, then all moves should be valid, minus the ones that directly lead to the king being in check, i.e. pins.
+            # if the king is not in check, then all moves should be valid, minus the ones that directly lead to the king being in check, i.e. pins.
             return self.get_all_moves()
 
         return valid_moves
 
-    
+    ### Function to update castling rules after a move, so no invalid castles occur.
     def update_castle_check(self, move): 
         if move.piece_moved == 'wK': 
             self.current_castling_check.wks = False
@@ -233,7 +237,7 @@ class Game():
             elif move.end_row == 0 and move.end_col == 7:
                 self.current_castling_check.bks = False
 
-        
+    ### Function to determine if the king is currently in check and from where and/or if a piece is pineed and from where.
     def find_pins_and_checks(self): 
 
         # first, determine whose turn it is, what the player colour is, what the opponent colour is, 
@@ -346,6 +350,9 @@ class Game():
         self.pins = pins
         self.checks = checks
 
+    
+    ### FUNCTIONS TO GET MOVES OF DIFFERENT PIECES.
+    
     def get_pawn_moves(self, row, col, valid_move_set): 
 
         # logic to ensure that pinned pawns cannot move.
@@ -595,7 +602,6 @@ class Game():
 
         return valid_move_set
 
-
     def get_kingside_castles(self, row, col): 
         set_to_return = set()
         # Note that we will only call this and the get queenside castles functions if the white king hasn't been moved
@@ -615,8 +621,7 @@ class Game():
         return set_to_return
 
 
-    # Expensive operation. Use it wisely.
-    # Find if a specific cell is under attack. Used to check if the adjacent cells to a king's home position are under attack or not for castling.
+    ### Function to find if a specific cell is under attack. Used to check if the adjacent cells to a king's home position are under attack or not.
     def cell_under_attack(self, row, col): 
 
         to_return = False
