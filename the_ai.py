@@ -34,7 +34,7 @@ def find_good_move(game, valid_move_set):
 
     ### Function to generate a "better" move for the AI based on an implementation of the minmax algorithm. This follows the recursive version of the minmax algorithm.
     ### Currently, the function is inefficient, but once alpha-beta pruning is implemented the function will run a lot faster. 
-    def find_move_minmax(valid_move_set, depth, maximizing_player): 
+    def find_move_minmax(valid_move_set, depth, alpha, beta, maximizing_player): 
     # base case is if we have looked as many moves as possible ahead, as specified by the depth parameter.
         if depth == 0: 
             return score_board(game)
@@ -63,6 +63,15 @@ def find_good_move(game, valid_move_set):
                     if depth == DEPTH: 
                         AI_move[0] = move
                 game.undo_move()
+                
+                #alpha-beta pruning
+                alpha = max(alpha, max_score)
+                # if our opponent's best move so far is less than our best move,
+                # then we don't need to inspect any other valid moves, because
+                # our opponent will not less us cast this move. 
+                if beta <= alpha: 
+                    break
+
             return max_score
 
         else: 
@@ -76,9 +85,18 @@ def find_good_move(game, valid_move_set):
                     if depth == DEPTH: 
                         AI_move[0] = move
                 game.undo_move()
+
+                #alpha-beta pruning
+                beta = min(beta, max_score)
+                # if our opponent's best move so far is better than our best move,
+                # then we don't need to inspect any other valid moves, because
+                # our opponent will not less us cast this move. 
+                if beta <= alpha: 
+                    break
+
             return min_score
 
-    find_move_minmax(valid_move_set, DEPTH, game.white_to_move)
+    find_move_minmax(valid_move_set, DEPTH, -CHECKMATE, CHECKMATE, game.white_to_move)
     return AI_move[0]
 
 ### Function to score the board based on our piece mapping created earlier. This function defines the heuristic of our algorithm.
