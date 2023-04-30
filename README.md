@@ -1,6 +1,6 @@
 # Chess Engine in Python
 
-This is a chess engine built in Python that allows human players to play against human players or computer opponents as well as spectate a match between two computer opponents. The engine consists of four files:
+The Python-based chess engine enables players to participate in a game against either other human players or computer opponents, as well as observe matches between computer opponents. The engine is comprised of four files:
 
 - `engine_drivers.py`:  This file includes functions that validate, make, and undo moves on the chessboard.
 - `core_engine.py`: The core engine file comprises the algorithms used to build the computer opponent to play against human players.
