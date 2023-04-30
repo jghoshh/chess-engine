@@ -1,7 +1,7 @@
 ### MAIN MODULE RESPONSIBLE FOR HANDLING USER INPUT AND RUNNING THE CHESS GAME.
 import pygame 
-import engine
-from the_ai import find_random_move, find_good_move
+import engine_drivers as engine
+from core_engine import find_random_move, find_good_move
 from move import Move
 
 pygame.init()

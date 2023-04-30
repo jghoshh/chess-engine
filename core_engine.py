@@ -17,6 +17,7 @@ from functools import cache, lru_cache
 # current best moves, then we do not inspect that branch any further and thus "prune" it.
 
 PIECE_SCORE = {"K": 0, "Q": 10, "R": 5, "B": 3, "K": 3, "P": 1}
+
 CHECKMATE = 10000
 STALEMATE = 0
 
