@@ -22,7 +22,6 @@ class Game():
         ]
 
         # We will maintain an instance variable that checks if it is white's turn to move or not.
-        # Note, for now, we will perceive the game from the perspective of white and only white.
         self.white_to_move = True
 
         # We will also maintain a move log, registering all the moves that occured in the game.

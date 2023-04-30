@@ -7,9 +7,3 @@ class CastleCheck():
         self.bks = bks
         self.wqs = wqs
         self.wks = wks
-    
-
-
-
-
-
