@@ -1,5 +1,3 @@
-# Chess Engine in Python
-
 # Chess Engine
 
 The chess engine is a Python-based program that powers the game of chess. It consists of four files: `core_engine_v1.py`, `core_engine_v2.py`, `engine_drivers.py`, and `main.py`.
