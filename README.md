@@ -1,10 +1,27 @@
 # Chess Engine in Python
 
-The Python-based chess engine enables players to participate in a game against either other human players or computer opponents, as well as observe matches between computer opponents. The engine is comprised of four files:
+# Chess Engine
 
-- `engine_drivers.py`:  This file includes functions that validate, make, and undo moves on the chessboard.
-- `core_engine.py`: The core engine file comprises the algorithms used to build the computer opponent to play against human players.
-- `main.py`: This file starts the game by running a Pygame instance.
-- `move.py`: The move class is defined in this file and is used to store the state of moves in the game.
-- `castle_check.py`: The castle class is defined in this file and is used to store the state of castles in the game.
+The chess engine is a Python-based program that powers the game of chess. It consists of four files: `core_engine_v1.py`, `core_engine_v2.py`, `engine_drivers.py`, and `main.py`.
 
+## File Structure
+
+- `core_engine_v1.py`: This is the initial version of the engine that powers the game in a naive way.
+- `core_engine_v2.py`: This is an improved version of the naive core engine. It implements transpositions, zorbibst hashing, piece square tables, and multi-thread processing to make the engine stronger and more efficient.
+- `engine_drivers.py`: This file defines the drivers of the game. It contains the functions that generate the legal states for each piece, make moves, and undo moves.
+- `main.py`: This is the executable program that runs the chess engine.
+
+## Installation
+
+To install the required packages, please use the `requirements.txt` file.
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+To use the chess engine, simply run the main.py program.
+```bash
+python main.py
+```
+The chess engine will start and you can start playing the game.
