@@ -2,7 +2,6 @@
 import pygame 
 import engine_drivers as engine
 from core_engine import find_random_move, find_good_move
-from move import Move
 
 pygame.init()
 WIDTH = HEIGHT = 512
@@ -116,7 +115,7 @@ def main():
                         
                         if (not first_click_pos == '--' or not second_click_pos == '--'): 
 
-                            curr_move = Move(player_clicks[0], player_clicks[1], game.board)
+                            curr_move = engine.Move(player_clicks[0], player_clicks[1], game.board)
 
                             if curr_move.piece_moved[1] == 'K' and (abs(curr_move.end_col - curr_move.start_col) == 2) and (curr_move.start_row == curr_move.end_row): 
                                 curr_move.castling_move = True

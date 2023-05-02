@@ -1,6 +1,5 @@
 ### MODULE THAT HANDLES AI RESPONSIBILITIES.
 import random 
-from functools import cache, lru_cache
 
 # our algorithm to make the AI pick a good move will involve implementing the minimax algo -- a process which leads
 # to select the move the creates the "best" game state for the respective player: black or white.
@@ -22,7 +21,7 @@ CHECKMATE = 10000
 STALEMATE = 0
 
 # for depth of the game tree -- essentially, how many moves the AI will look forward.
-DEPTH = 3
+DEPTH = 5
 
 ### Function to generate random move for the AI
 def find_random_move(valid_move_set): 
