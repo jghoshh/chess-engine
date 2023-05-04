@@ -1,7 +1,7 @@
 ### MAIN MODULE RESPONSIBLE FOR HANDLING USER INPUT AND RUNNING THE CHESS GAME.
 import pygame 
 import engine_drivers as engine
-from core_engine_v1 import find_random_move, find_good_move
+from core_engine_v2 import find_random_move, run_engine
 
 pygame.init()
 WIDTH = HEIGHT = 512
@@ -56,9 +56,6 @@ def main():
 
     # we need to store two positions of where the user clicked: one click to select the piece, one click to select the position to move the piece to.
     player_clicks = [] # this list will store the two clicks of the user in the form of two tuples. 
-
-    # the current cell that is selected -- used for highlighting purposes.
-    cell_selected = ()
 
     # need a two variables to denote which position the AI will be playing and which position the player will be playing.
     # whatever colour human plays is white, and whatever colour the AI plays will be black.
@@ -132,10 +129,9 @@ def main():
             valid_moves = game.get_valid_moves()
             move_made = False
 
-        # AI move making. 
+        # Engine move making.
         if not human and not game_over:
-            AI_move = find_good_move(game, valid_moves)
-            print(AI_move)
+            AI_move = run_engine(game, valid_moves)
             if not AI_move: 
                 AI_move = find_random_move(valid_moves)
             game.make_move(AI_move)

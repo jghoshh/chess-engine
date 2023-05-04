@@ -1,2 +1,4 @@
 __pycache__
 chess-engine-venv
+parallel.py
+archive.py

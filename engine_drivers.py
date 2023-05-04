@@ -4,9 +4,34 @@ from collections import deque
 ROW_TO_RANKS = {7:"1", 6:"2", 5:"3", 4:"4", 3:"4", 2:"6", 1:"7", 0:"8"}
 COLS_TO_FILES = {0:"a", 1:"b", 2:"c", 3:"d", 4:"e", 5:"f", 6:"g", 7:"h"}
 
-# Class to define moves in an object oriented manner in the game. 
-class Move(): 
 
+class Move(): 
+    '''
+    Represents a move made on the chess board.
+
+    Args:
+        start (tuple): Tuple representing the starting position of the piece to be moved.
+        end (tuple): Tuple representing the ending position of the piece to be moved.
+        board (list): A list representing the chess board.
+        castling_move (bool): A boolean variable indicating whether the move was a castling move.
+
+    Attributes:
+        start_row (int): The row of the starting position of the piece to be moved.
+        start_col (int): The column of the starting position of the piece to be moved.
+        end_row (int): The row of the ending position of the piece to be moved.
+        end_col (int): The column of the ending position of the piece to be moved.
+        piece_captured (str): A string representing the piece that was captured by the move, if any.
+        piece_moved (str): A string representing the piece that was moved.
+        castling_move (bool): A boolean indicating whether the move was a castling move.
+        id: An integer representing the unique ID of the move.
+    
+    Returns:
+        A Move object.
+
+    The Move class represents a move made on the chess board. The class has attributes to represent the starting position, ending position, 
+    piece moved, piece captured (if any), and whether the move was a castling move or not. The class also has methods to create a unique hash value 
+    for each move and to check if two moves are equal. 
+    '''
     def __init__(self, start, end, board, castling_move=False): 
         self.start_row = start[0]
         self.start_col = start[1]
@@ -17,7 +42,6 @@ class Move():
         self.castling_move = castling_move
         self.id = self.__hash__()
 
-    # need to define a hash function because we are using a set to store valid moves.
     def __hash__(self):
         return hash(self.key())
     
@@ -25,7 +49,6 @@ class Move():
         return (self.start_row, self.start_col, self.end_row, self.end_col, self.piece_captured, self.piece_moved, self.castling_move)
 
     def __eq__(self, other):
-        # need is instance here to inspect appropriate attributes.
         if isinstance(other, Move):
             return (self.start_row, self.start_col, self.end_row, self.end_col, self.piece_captured, self.piece_moved, self.castling_move) == (other.start_row, other.start_col, other.end_row, other.end_col, other.piece_captured, other.piece_moved, other.castling_move)
         return False
@@ -33,23 +56,54 @@ class Move():
     def __repr__(self): 
         return  COLS_TO_FILES[self.start_col] + ROW_TO_RANKS[self.start_row] + COLS_TO_FILES[self.end_col] + ROW_TO_RANKS[self.end_row]
 
-# Class to maintain the state of castles in the chess game. 
+
 class CastleCheck(): 
-    # there are four types of castles we need to check for. 
-    # white and black, king and queen side castles. 
+    '''
+    Class to maintain the state of castles in the chess game.
+    
+    Attributes:
+    - wks (bool): True if the white king can still make a kingside castle, False otherwise.
+    - bks (bool): True if the black king can still make a kingside castle, False otherwise.
+    - wqs (bool): True if the white king can still make a queenside castle, False otherwise.
+    - bqs (bool): True if the black king can still make a queenside castle, False otherwise.
+    
+    The class represents the state of the castling rules in the game. Castling can be done only under specific circumstances, 
+    so it is necessary to keep track of the castling options available to both players. The four attributes of the class 
+    indicate whether each of the four castling options (white/black kingside/queenside) is available. Each attribute is set 
+    to True initially, and will be updated as castling moves are made, or if a rook or king is moved or captured.
+    '''
     def __init__(self, wks, bks, wqs, bqs): 
         self.bqs = bqs
         self.bks = bks
         self.wqs = wqs
         self.wks = wks
 
-
-### This class defines and records the state of the chess game being played.
+        
 class Game():
+    '''
+    This class defines and records the state of the chess game being played.
+
+    Attributes:
+    - board (list): The chess board.
+    - white_to_move (bool): A variable that checks if it is white's turn to move or not.
+    - move_log (deque): A move log, registering all the moves that occurred in the game.
+    - move_functions (dict): Dictionary for function calls for more elegant code.
+    - white_king_pos (tuple): Current position of the white king on the board.
+    - black_king_pos (tuple): Current position of the black king on the board.
+    - in_check (bool): A variable to determine if the player is currently in check or not.
+    - check_mate (bool): A variable to determine if a checkmate has occurred or not.
+    - stale_mate (bool): A variable to determine if a stalemate has occurred or not.
+    - pins (list): A list of the pieces that are pinned.
+    - checks (list): A list of the positions where the opponent has a piece that is checking the player's king.
+    - current_castling_check (obj): A variable to determine if any castling rule has been broken.
+    - castling_check_log (deque): A variable to keep track of the moves that affect castling rules.
+    '''
 
     def __init__(self): 
-
-        #The chess board. 
+        """
+        Initializes a new instance of the Game class with the chess board, move log, and various other attributes.
+        """
+        # The chess board. 
         self.board = [ 
         ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"], 
         ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"], 
@@ -100,9 +154,23 @@ class Game():
         self.castling_check_log = deque()
         self.castling_check_log.append(deepcopy(self.current_castling_check))
 
-    ### Function to make a move. 
     def make_move(self, move): 
+        '''
+        Makes a move on the chess board and updates the board, move log, king position, and castling moves.
 
+        Args:
+            move (Move): A Move object representing the move to be made.
+
+        Returns:
+            None.
+
+        The function takes in a Move object and updates the chess board, move log, king position, and castling moves according to the specified move.
+        If the piece being moved is not a king, it updates the square the piece was moved to with the piece symbol and sets the original square to empty.
+        The function then appends the move to the move log and changes the turn to the opposite player.
+        If the piece being moved is a king, it updates the king position for the corresponding player.
+        If the move is a castling move, it updates the appropriate squares for the rook and king.
+        Finally, it updates the castling checks and appends the current castling state to the castling check log.
+        '''
         if move.piece_moved != None:
                 self.board[move.end_row][move.end_col] = move.piece_moved
                 self.board[move.start_row][move.start_col] = "--"
@@ -124,8 +192,20 @@ class Game():
                 self.update_castle_check(move)
                 self.castling_check_log.append(CastleCheck(self.current_castling_check.wks, self.current_castling_check.bks, self.current_castling_check.wqs, self.current_castling_check.bqs))
 
-    ### Function to reverse/undo the most recent move. 
     def undo_move(self): 
+        """
+        Reverts the last move made in the game by updating the board, current turn, and castling rights.
+
+        Args:
+            self (obj): An instance of the Game class.
+
+        Returns:
+            None
+
+        The function pops the last move object from the move log and uses it to undo the move on the board. The piece that was moved is placed back to its 
+        initial position, and the piece that was captured (if any) is restored to the end square. The function also updates the king position, turn 
+        status, and castling rights. Finally, the function resets any possible checkmate or stalemate flags.
+        """
         if self.move_log: 
             move = self.move_log.pop()
             self.board[move.start_row][move.start_col] = move.piece_moved
@@ -156,10 +236,22 @@ class Game():
             # anytime we undo move, we can't possibly be in checkmate or stalemate.
             self.check_mate = False
             self.stale_mate = False
-
-    ### Function to get all possible moves, without considering any checks. 
+ 
     def get_all_moves(self):
+        """
+        Returns a set of all possible moves on the chess board, without considering any checks.
 
+        Args:
+            self (obj): An instance of the Game class.
+
+        Returns:
+            A set of Move objects. Each Move object represents a valid move on the board.
+
+        The function returns a set of all possible moves on the board without considering any checks. It first determines the king's position and 
+        initializes an empty set to hold all possible moves. Then it loops through the entire board and finds all pieces of the player whose turn it is 
+        and calls the appropriate method to compute their valid moves. The function then returns the set of all possible moves, including castling 
+        moves if possible.
+        """
         if self.white_to_move: 
             king_row, king_col = self.white_king_pos
         else: 
@@ -177,9 +269,27 @@ class Game():
         
         return self.get_castle_moves(king_row, king_col, all_moves)
                     
-    ### Function to get all possible moves, while considering checks. Returns all possible, valid moves.
     def get_valid_moves(self): 
+        """
+        Returns a set of all possible valid moves on the chess board, considering checks.
 
+        Args:
+            self (obj): An instance of the Game class.
+
+        Returns:
+            A set of Move objects. Each Move object represents a valid move on the board.
+
+        The function returns a set of all possible valid moves on the board, considering checks. It first initializes an empty set of valid moves 
+        and a set of valid cells. Then it calls the 'find_pins_and_checks' method to determine if the king is in check and to identify any pins or 
+        checks on the board. If the king is not in check, then all moves should be valid except for those that result in the king being in check. 
+        In this case, the function calls the 'get_all_moves' method to obtain all possible moves and returns the set. If the king is in check, then 
+        the function performs additional checks to filter out invalid moves. If the king is checked in only one way, then the function either moves 
+        the king or blocks the check. If the attacker is a knight, then only the king or the knight can move to block the check. If the attacker is not 
+        a knight, then the function checks for possible moves to block the check, either by moving a piece in the direction of the attack or by capturing 
+        the attacking piece. The function then filters all valid moves such that only the moves that end up in the valid cells remain. If the king is 
+        checked in multiple ways, then the function returns all possible moves of the king. The function sets the 'check_mate' flag to True if the king 
+        is in checkmate or 'state_mate' flag to True if the game is in a stalemate. The function then returns the set of valid moves.
+        """
         valid_moves = set()
         valid_cells = set()
         self.find_pins_and_checks()
@@ -240,9 +350,45 @@ class Game():
             return self.get_all_moves()
 
         return valid_moves
+    
+    def get_capture_moves(self):
+        """
+        Returns a list of all capture moves on the chess board.
 
-    ### Function to update castling rules after a move, so no invalid castles occur.
+        Args:
+            self(obj): An instance of the Game class.
+
+        Returns:
+            A list of Move objects. Each Move object represents a capture move on the board.
+
+        The function returns a list of all capture moves on the board. It first gets all valid moves using the 'get_valid_moves' method. 
+        Then it iterates over every move and checks if the end position of the move has a piece on it or not. If there is a piece on the end 
+        position, the move is a capture move, and it is added to the list of capture moves. The function then returns the list of capture moves.
+        """
+        capture_moves = []
+        all_moves = self.get_valid_moves()
+
+        for move in all_moves:
+            if self.board[move.end_row][move.end_col] != "--":
+                capture_moves.append(move)
+
+        return capture_moves
+
     def update_castle_check(self, move): 
+        """
+        Updates the current castling check object with the new castling rights after a move is made.
+
+        Args:
+            move (Move): An instance of the Move class representing the move that was made.
+
+        Returns:
+            None. The method updates the relevant castling rights of the current_castling_check object.
+
+        The function updates the current_castling_check object to reflect the new castling rights after a move is made. 
+        If the king or rook is moved, the corresponding castling right is removed. If a rook is captured, the corresponding 
+        castling right is removed. The current_castling_check object stores the current castling rights and is used to check 
+        if a player can castle on their turn. 
+        """
         if move.piece_moved == 'wK': 
             self.current_castling_check.wks = False
             self.current_castling_check.wqs = False
@@ -275,9 +421,25 @@ class Game():
             elif move.end_row == 0 and move.end_col == 7:
                 self.current_castling_check.bks = False
 
-    ### Function to determine if the king is currently in check and from where and/or if a piece is pineed and from where.
     def find_pins_and_checks(self): 
+        '''
+        Finds all possible pins and checks on a chess board for the current player.
 
+        For knights, the function iterates over every possible knight move from the king's location, checking for a check.
+
+        Args:
+            self(obj): An instance of the Game class.
+
+        Returns:
+            None. The function updates the 'in_check', 'pins', and 'checks' instance variables with the calculated values.
+        
+        The function determines whose turn it is, what the player color is, what the opponent color is, and where the player's king is located.
+        Then it checks every possible direction that can produce a check, looking for possible pins or checks. For each direction, 
+        the function iterates over every cell in that direction, checking if there is a pin or a check. If there is a pin, the function 
+        adds it to the list of pins, and if there is a check, it adds it to the list of checks. If an attacker in a direction cannot produce a check, 
+        the function does not check this direction further. If there is an attacker in a direction that can produce a check, the function checks 
+        whether there is a pin or not. If there is no pin, the function adds the check to the list of checks. If there is a pin, it adds the pin to the list of pins.
+        '''
         # first, determine whose turn it is, what the player colour is, what the opponent colour is, 
         # and where the player's king is located.
         enemy_colour = 'w'
@@ -388,11 +550,26 @@ class Game():
         self.pins = pins
         self.checks = checks
 
-    
+    ###############################################
     ### FUNCTIONS TO GET MOVES OF DIFFERENT PIECES.
-    
+    ###############################################
     def get_pawn_moves(self, row, col, valid_move_set): 
+        """
+        Generates all possible valid moves for a pawn piece on a chess board.
 
+        Args:
+            - row (int): the row index of the piece on the board.
+            - col (int): the column index of the piece on the board.
+            - valid_move_set (set): a set to hold all the possible valid moves.
+
+        Returns:
+            None. The function adds all possible valid moves to the valid_move_set set parameter.
+
+        The function first checks if the pawn is pinned, meaning it cannot move because it would expose the king.
+        If it is white's turn, the function computes the valid moves of the white pawns, considering empty squares and captures.
+        If it is black's turn, the function computes the valid moves of the black pawns, considering empty squares and captures.
+        Valid moves are added to the valid_move_set set parameter.
+        """
         # logic to ensure that pinned pawns cannot move.
         piece_pinned = False
         direction = ()
@@ -463,31 +640,111 @@ class Game():
 
 
     def get_rook_moves(self, row, col, valid_move_set): 
+        """
+        Generates all possible valid moves for a rook piece on a chess board.
+
+        Args:
+            - row (int): the row index of the piece on the board.
+            - col (int): the column index of the piece on the board.
+            - valid_move_set (set): a set to hold all the possible valid moves.
+
+        Returns:
+            None. The function adds all possible valid moves to the valid_move_set set parameter.
+
+        Calls the 'get_bishop_or_rook_moves' function with the 'rook' parameter set to True.
+        """
         self.get_bishop_or_rook_moves(row, col, valid_move_set)
 
-
     def get_knight_moves(self, row, col, valid_move_set):
+        """
+        Generates all possible valid moves for a knight piece on a chess board.
+
+        Args:
+            - row (int): the row index of the piece on the board.
+            - col (int): the column index of the piece on the board.
+            - valid_move_set (set): a set to hold all the possible valid moves.
+
+        Returns:
+            None. The function adds all possible valid moves to the valid_move_set set parameter.
+
+        Calls the 'get_king_or_knight_moves' function with the 'king' parameter set to False.
+        """
         self.get_king_or_knight_moves(row, col, valid_move_set, king=False)
 
-
     def get_bishop_moves(self, row, col, valid_move_set): 
+        """
+        Generates all possible valid moves for a bishop piece on a chess board.
+
+        Args:
+            - row (int): the row index of the piece on the board.
+            - col (int): the column index of the piece on the board.
+            - valid_move_set (set): a set to hold all the possible valid moves.
+
+        Returns:
+            None. The function adds all possible valid moves to the valid_move_set set parameter.
+
+        Calls the 'get_bishop_or_rook_moves' function with the 'rook' parameter set to False.
+        """
         self.get_bishop_or_rook_moves(row, col, valid_move_set, rook=False)
 
     def get_king_moves(self, row, col, valid_move_set): 
+        """
+        Generates all possible valid moves for a king piece on a chess board.
+
+        Args:
+            - row (int): the row index of the piece on the board.
+            - col (int): the column index of the piece on the board.
+            - valid_move_set (set): a set to hold all the possible valid moves.
+
+        Returns:
+            None. The function adds all possible valid moves to the valid_move_set set parameter.
+
+        Calls the 'get_king_or_knight_moves' function with the 'king' parameter set to True.
+        """
         self.get_king_or_knight_moves(row, col, valid_move_set, king=True)
 
-
     def get_queen_moves(self, row, col, valid_move_set): 
-        # if a queen is pinned, we need to create two pin lists and send them to the bishop or rook move generating function. 
-        # otherwise, the queen pin will be removed in the rook function and diagonal queen moves will be valid, as all bishop moves will be perceived to be valid.
+        """
+        Generates all possible valid moves for a queen piece on a chess board.
+
+        Args:
+            - row (int): the row index of the piece on the board.
+            - col (int): the column index of the piece on the board.
+            - valid_move_set (set): a set to hold all the possible valid moves.
+
+        Returns:
+            None. The function adds all possible valid moves to the valid_move_set set parameter.
+
+        Calls the 'get_bishop_or_rook_moves' function twice - first with the 'rook' 
+        parameter set to True and then with it set to False. This is done because the queen 
+        moves like the bishop mixed in with the rook.
+        """
         self.get_bishop_or_rook_moves(row, col, valid_move_set, rook=True)
         self.get_bishop_or_rook_moves(row, col, valid_move_set, rook=False)
 
 
-    # Since both bishops and rooks follow the same algorithm to compute valid moves, for the sake of design, we will design a generic function
+    # Since both bishops and rooks follow the same algorithm to compute valid moves, for the sake of simplicity of design, we will design a generic function
     # that is controlled by a flag variable indicating whether is the bishop or the rook's moves which need to be computed. 
     def get_bishop_or_rook_moves(self, row, col, valid_move_set, rook=True): 
-        # logic to ensure that pinned rooks cannot move.
+        '''
+        This function generates all possible valid moves for a bishop or a rook piece on a chess board.
+
+        Args:
+        - row (int): the row index of the piece on the board.
+        - col (int): the column index of the piece on the board.
+        - valid_move_set (set): a set to hold all the possible valid moves.
+        - rook (bool, optional): a boolean value indicating whether the piece is a rook or a bishop.
+        Default is True, indicating the piece is a rook.
+
+        Returns:
+        None. The function adds all possible valid moves to the valid_move_set set parameter.
+
+        The function first checks if the piece is pinned, meaning it cannot move because it would expose the king.
+        It then determines the color of the piece, and the direction(s) it can move in. Using a nested for loop, the function
+        generates all the possible moves the piece can make. The function also checks if the move is valid by checking if the
+        piece is moving onto an empty square, capturing an opponent piece or moving off the board. The valid moves are added
+        to the valid_move_set set parameter
+        '''
         piece_pinned = False
         direction = ()
         queen_check = rook and self.board[row][col][1] == 'Q'
@@ -561,9 +818,24 @@ class Game():
                 else: 
                     break
     
-    # General function to generate valid king or knight moves just like as done above for bishop or rook moves.
     def get_king_or_knight_moves(self, row, col, valid_move_set, king=True): 
+        '''
+        Generates valid moves for a king or a knight at a given position.
 
+        Args:
+            row (int): The row index of the piece.
+            col (int): The column index of the piece.
+            valid_move_set (set): The set of valid moves for the piece.
+            king (bool): Whether the piece is a king (True) or a knight (False).
+
+        Returns:
+            None
+
+        This function generates valid moves for a king or a knight at the specified position (row, col). 
+        If king is True, it generates all valid moves for a king, excluding moves that would put the king into check. 
+        If king is False, it generates all valid moves for a knight, and checks for any pins on the piece.
+        The generated moves are added to the valid_move_set.
+        '''
         piece_colour = self.board[row][col][0]
         enemy_colour = 'w'
         if (piece_colour == enemy_colour): enemy_colour = 'b'
@@ -621,7 +893,19 @@ class Game():
                         self.find_pins_and_checks()
     
     def get_castle_moves(self, row, col, valid_move_set): 
-        # if we are already in check, then we cannot castle.
+        """
+        Returns a set of valid move objects that include the possible castle moves for the king at the given position.
+        A castle move can be either kingside or queenside, and requires that the king and the rook involved in the castling
+        have not moved before, and that the squares between them are unoccupied and not under attack.
+            
+        Parameters:
+            row (int): The row index of the king's position on the board.
+            col (int): The column index of the king's position on the board.
+            valid_move_set (set): A set of valid move objects for the king piece at the given position.
+            
+        Returns:
+            set: A set of valid move objects that include the possible castle moves for the king at the given position.
+        """
         ks_castles, qs_castles = None, None
 
         if self.in_check: 
@@ -642,9 +926,19 @@ class Game():
         return valid_move_set
 
     def get_kingside_castles(self, row, col): 
+        """
+        Given a row and column corresponding to the position of a king,
+        returns a set of legal moves corresponding to kingside castling if it is a legal move.
+
+        Args:
+            row (int): The row of the king.
+            col (int): The column of the king.
+
+        Returns:
+            set: A set of legal moves corresponding to kingside castling, represented as Move objects,
+            or an empty set if kingside castling is not legal.
+        """
         set_to_return = set()
-        # Note that we will only call this and the get queenside castles functions if the white king hasn't been moved
-        # As such, we do not need a check for that in the functions.
         if self.board[row][col+1] == '--' and self.board[row][col+2] == '--': 
             if not self.cell_under_attack(row, col+1) and not self.cell_under_attack(row, col+2): 
                 set_to_return.add(Move((row, col), (row, col+2), self.board, castling_move=True))
@@ -659,10 +953,24 @@ class Game():
                 set_to_return.add(Move((row, col), (row, col-2), self.board, castling_move=True))
         return set_to_return
 
-
-    ### Function to find if a specific cell is under attack. Used to check if the adjacent cells to a king's home position are under attack or not.
     def cell_under_attack(self, row, col): 
-
+        """
+        Determines whether the cell at the given position on the board is being attacked by any of the opponent's pieces.
+        
+        Args:
+        - row (int): The row of the cell being checked.
+        - col (int): The column of the cell being checked.
+        
+        Returns:
+        - A boolean value indicating whether the cell is under attack by any of the opponent's pieces.
+        
+        This function checks whether the cell at the given position on the board is being attacked by any of the opponent's
+        pieces. It does so by temporarily moving the king of the current player to the cell, and then checking whether the king
+        is in check. If the king is in check, then the cell is under attack.
+        
+        Note that this function only works if the positions of the kings on the board are known, so the find_kings() function
+        should be called before calling this function for the first time.
+        """
         to_return = False
         piece_colour = 'b'
         start_pos = self.black_king_pos
