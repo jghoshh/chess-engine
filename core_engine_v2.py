@@ -204,7 +204,7 @@ def compute_zobrist_hash(game):
     is used in chess engines to quickly detect repeated positions.
 
     Args:
-        game: A 8x8 matrix of strings demonstrating the current position of the chess game.
+        game: A Game object representing the current position.
 
     Returns:
         An integer representing the Zobrist hash of the position.
@@ -229,7 +229,7 @@ def find_random_move(valid_move_set):
     Given a set of valid moves, choose one at random and return it.
 
     Args:
-        valid_move_set: A set of `Move` objects representing the valid moves.
+        valid_move_set: A set of Move objects representing the valid moves.
 
     Returns:
         A randomly chosen move from `valid_move_set`.
@@ -246,10 +246,10 @@ def score_board(game):
     center control, mobility, and piece development.
 
     Args:
-    - game: An object representing the current state of the game.
+        game: A Game object representing the current position.
 
     Returns:
-    - total_score: An integer representing the calculated score of the game state.
+        total_score: An integer representing the calculated score of the game state.
     """
     total_score = 0
 
@@ -311,7 +311,7 @@ def pawn_structure(game):
     - Passed pawns are rewarded.
 
     Args:
-        game: A `chess.Board` object representing the current position.
+        game: A Game object representing the current position.
 
     Returns:
         An integer representing the difference in pawn structure score between
@@ -423,7 +423,7 @@ def evaluate_rooks(game):
     - Connected rooks are rewarded.
 
     Args:
-        game: A `Game` object representing the current position.
+        game: A Game object representing the current position.
 
     Returns:
         An integer representing the difference in rook placement score between
@@ -529,7 +529,7 @@ def piece_development(game):
     - Penalty for undeveloped pieces on their initial squares.
 
     Args:
-        game: A `Game` object representing the current position.
+        game: A Game object representing the current position.
 
     Returns:
         An integer representing the difference in piece development score between
@@ -578,7 +578,7 @@ def king_safety(game):
     - Bonus for king mobility.
 
     Args:
-        game: A `Game` object representing the current position.
+        game: A Game object representing the current position.
 
     Returns:
         An integer representing the difference in king safety score between
@@ -592,11 +592,11 @@ def king_safety(game):
         that can protect it from enemy attacks. 
 
         Args:
-        - king_pos: A tuple (row, col) representing the position of the king on the board.
-        - color: A string "w" or "b" representing the color of the king.
+            king_pos: A tuple (row, col) representing the position of the king on the board.
+            color: A string "w" or "b" representing the color of the king.
 
         Returns:
-        - The shield score for the king of the specified color, which is a weighted sum of the values of the pieces that form the shield.
+            The shield score for the king of the specified color, which is a weighted sum of the values of the pieces that form the shield.
         """        
         shield_score = 0
         shield_pieces = ["P", "N", "B", "R", "Q"]
@@ -622,10 +622,10 @@ def king_safety(game):
         being under attack.
 
         Args:
-        - king_pos: A tuple (row, col) representing the position of the king on the board.
+            king_pos: A tuple (row, col) representing the position of the king on the board.
 
         Returns:
-        - The mobility score for the king, which is a weighted sum of the number of squares the king can move to without being under attack.
+            The mobility score for the king, which is a weighted sum of the number of squares the king can move to without being under attack.
         """
         mobility_score = 0
         king_moves = set()
@@ -655,7 +655,7 @@ def center_control(game):
     It counts the number of valid moves that attack center squares, and sums up the total center control for both white and black pieces.
 
     Args:
-        game: A `Game` object representing the current position.
+        game: A Game object representing the current position.
 
     Returns:
         float: The difference between white center control score and black center control score, multiplied by `CENTER_CONTROL_WEIGHT`.
@@ -715,7 +715,7 @@ def mobility(game):
     value for the opponent.
 
     Args:
-        game: A `Game` object representing the current position.
+        game: A Game object representing the current position.
 
     Returns:
         float: The mobility score, as a positive value for the player with the next move and a negative value for the opponent.
@@ -729,6 +729,28 @@ def mobility(game):
 ### THE MIN MAX ALGORITHM WITH MVV-LVA MOVE ORDERING AND MOVE REDUCTION
 ######################### 
 def find_good_move(game, valid_move_set): 
+    '''
+    The function find_good_move uses the Minimax algorithm with alpha-beta pruning and transposition table lookup to calculate the best move for a player in a chess game.
+
+    Args:
+        game: A Game object representing the current state of the game.
+        valid_move_set (set): A set of Move objects representing the valid moves for the current player.
+
+    Returns:
+        tuple: A tuple containing the best score and the corresponding best move, respectively.
+
+    The function first defines two helper functions: mvv_lva_score and reduction_factor. 
+    The mvv_lva_score function calculates a score for each move based on the Most Valuable Victim (MVV) and Least Valuable Attacker (LVA) heuristic, with an additional 
+    bonus score for moves that target the center of the board. The reduction_factor function calculates a reduction factor to apply to the depth of the
+    Minimax algorithm search based on the current depth and move number.
+
+    The find_move_minmax function recursively evaluates the Minimax score for each move in the valid_move_set, up to a specified depth, using alpha-beta pruning to optimize the search. 
+    It also uses a transposition table to store previously calculated positions, improving the search efficiency.
+
+    The find_good_move function then initializes variables and copies of the game for each process, splits the valid moves into subsets, and uses the 
+    find_move_minmax function to calculate the best move for each subset of moves in parallel using multiple processes. 
+    Finally, the function returns the move with the highest score if the player is the maximizing player, or the move with the lowest score if the player is the minimizing player.
+    '''
 
     def mvv_lva_score(move):
         start_piece = game.board[move.start_row][move.start_col]
@@ -743,11 +765,43 @@ def find_good_move(game, valid_move_set):
         return score if game.white_to_move else -score
 
     def reduction_factor(depth, move_number):
+        '''
+        Calculate the reduction factor for a move in the Minimax algorithm.
+
+        The function calculates the reduction factor to apply to the depth of the Minimax algorithm search based on the current depth and move number. 
+        The reduction factor is computed as the maximum of 1 and the integer result of the product of the logarithm of the current depth plus 1 
+        and the logarithm of the move number plus 1. If the current depth is less than 3, a reduction factor of 0 is returned.
+
+        Args:
+            depth (int): An integer representing the current depth of the Minimax algorithm search.
+            move_number (int): An integer representing the current move number.
+
+        Returns:
+            int: The reduction factor to apply to the depth of the Minimax algorithm search.
+        '''
         if depth < 3:
             return 0
         return max(1, int(math.log(depth + 1) * math.log(move_number + 1)))
 
     def find_move_minmax(valid_move_set, depth, alpha, beta, maximizing_player, move_number):
+        '''
+        Calculate the best move for a player in a chess game using the minimax algorithm with alpha-beta pruning and transposition table lookup.
+
+        The function recursively evaluates the minimax score for each move in the valid_move_set, up to a specified depth, 
+        using alpha-beta pruning to optimize the search. It also uses a transposition table to store previously calculated positions, 
+        improving the search efficiency.
+
+        Args:
+            valid_move_set (set): A set of Move objects representing the valid moves for the current player.
+            depth (int): The maximum depth to search.
+            alpha (int): The initial value for alpha.
+            beta (int): The initial value for beta.
+            maximizing_player (bool): A boolean indicating if the player is the maximizing player.
+            move_number (int): An integer representing the move number.
+
+        Returns:
+            tuple: A tuple containing the best score and the corresponding best move, respectively.
+        '''
         zobrist_hash = compute_zobrist_hash(game)
         cached_entry = TRANSPOSITION_TABLE.lookup(zobrist_hash)
 
@@ -802,6 +856,21 @@ def find_good_move(game, valid_move_set):
 ### RUNNING MIN MAX CONCURRENT
 ######################### 
 def run_concurrent(game, valid_moves, maximizing_player):
+    '''
+    Calculate the best move for a player using multiprocessing.
+
+    The function splits the valid moves into subsets and creates a copy of the game for each subset. Then, using the ProcessPoolExecutor 
+    from the concurrent.futures module, it runs the find_good_move function concurrently for each subset. 
+    Finally, it accumulates the results and returns the move with the highest score for a maximizing player or the move with the lowest score for a minimizing player.
+
+    Args:
+        game: A Game object representing the current state of the game.
+        valid_moves (set): A set of valid moves for the current player.
+        maximizing_player (bool): A boolean indicating whether the current player is maximizing (True) or minimizing (False).
+
+    Returns:
+        tuple: A tuple containing the score and the best move (in algebraic notation) for the current player.
+    '''
     num_processes = multiprocessing.cpu_count() - 1  # Leave one core for the main process and other system tasks
     num_processes = max(1, num_processes)  # Ensure at least one process is used
 
